@@ -1,0 +1,104 @@
+{% extends 'admins/restaurant_base.html' %}
+
+{% block title %}Stollar - {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="fas fa-chair me-2"></i>Stollar va QR Kodlar</h4>
+    <div class="d-flex gap-2">
+        <form method="POST" action="/restaurant-admin/{{ restaurant.id }}/tables/" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="download_qr_pdf">
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-file-pdf me-2"></i> QR kodlarni PDFda yuklab olish
+            </button>
+        </form>
+        <form method="POST" action="/restaurant-admin/{{ restaurant.id }}/tables/" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="generate_all_qr">
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-qrcode me-2"></i> Hammasiga QR yaratish
+            </button>
+        </form>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTableModal">
+            <i class="fas fa-plus me-2"></i> Stol qo'shish
+        </button>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for table in tables %}
+    <div class="col-md-4 col-lg-3">
+        <div class="card-modern p-4 text-center">
+            {% with table.qr_code as qr %}
+            <div class="mb-3">
+                {% if qr %}
+                <div class="bg-light p-3 rounded-3 mb-3">
+                    <i class="fas fa-qrcode fa-3x text-success"></i>
+                </div>
+                <small class="text-success d-block mb-2">
+                    <i class="fas fa-check-circle me-1"></i> QR bor
+                </small>
+                <a href="/api/admin/table-qr/{{ qr.id }}/" target="_blank" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-eye me-1"></i> QR ko'rish
+                </a>
+                {% else %}
+                <div class="bg-light p-3 rounded-3 mb-3">
+                    <i class="fas fa-qrcode fa-3x text-muted"></i>
+                </div>
+                <form method="POST" action="/restaurant-admin/{{ restaurant.id }}/tables/" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="generate_qr">
+                    <input type="hidden" name="table_id" value="{{ table.id }}">
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-1"></i> QR yaratish
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            {% endwith %}
+            <h5 class="mb-1">Stol №{{ table.table_number }}</h5>
+            <p class="text-muted mb-2">{{ table.capacity }} kishilik</p>
+            <span class="badge bg-{% if table.is_available %}success{% else %}danger{% endif %} badge-modern">
+                {% if table.is_available %}Bos'h{% else %}Band{% endif %}
+            </span>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+        <i class="fas fa-chair fa-4x text-muted mb-3"></i>
+        <p class="text-muted">Stollar yo'q. "Stol qo'shish" tugmasini bosing.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Add Table Modal -->
+<div class="modal fade" id="addTableModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Yangi stol</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/restaurant-admin/{{ restaurant.id }}/tables/">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_table">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Stol raqami *</label>
+                        <input type="text" class="form-control" name="table_number" required placeholder="1, 2, 3...">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sig'im (kishi) *</label>
+                        <input type="number" class="form-control" name="capacity" value="4" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

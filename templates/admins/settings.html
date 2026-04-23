@@ -1,0 +1,435 @@
+{% extends 'admins/base.html' %}
+
+{% block title %}Sozlamalar - LocEats Admin{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4><i class="fas fa-cog"></i> Sozlamalar</h4>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+<!-- System Info -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card-modern">
+            <h5 class="mb-4"><i class="fas fa-info-circle me-2"></i>Tizim Ma'lumotlari</h5>
+            <table class="table table-borderless">
+                <tr>
+                    <td><strong>Ilova:</strong></td>
+                    <td>{{ app_name }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Versiya:</strong></td>
+                    <td>1.0.0</td>
+                </tr>
+                <tr>
+                    <td><strong>Backend:</strong></td>
+                    <td>Django 5.x</td>
+                </tr>
+                <tr>
+                    <td><strong>Database:</strong></td>
+                    <td>MySQL 8.4</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card-modern">
+            <h5 class="mb-4"><i class="fas fa-chart-bar me-2"></i>Statistika</h5>
+            <table class="table table-borderless">
+                <tr>
+                    <td><strong>Restoranlar:</strong></td>
+                    <td>{{ stats.total_restaurants }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Adminlar:</strong></td>
+                    <td>{{ stats.total_admins }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Foydalanuvchilar:</strong></td>
+                    <td>{{ stats.total_users }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Sharhlar:</strong></td>
+                    <td>{{ stats.total_reviews }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- App Info -->
+<div class="card-modern mb-4">
+    <h5 class="mb-4"><i class="fas fa-mobile-alt me-2"></i>Ilova Ma'lumotlari</h5>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save_app_info">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Ilova nomi</label>
+                <input type="text" name="app_name" class="form-control" value="{{ app_name }}">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Qo'llab quvvatlash telefoni</label>
+                <input type="text" name="contact_phone" class="form-control" value="{{ contact_phone }}">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="contact_email" class="form-control" value="{{ contact_email }}">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>Saqlash
+        </button>
+    </form>
+</div>
+
+<!-- About Us -->
+<div class="card-modern mb-4">
+    <h5 class="mb-4"><i class="fas fa-file-alt me-2"></i>"Biz haqimizda" matni</h5>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save_about_us">
+        <div class="mb-3">
+            <textarea name="about_us" class="form-control" rows="4" placeholder="Ilova haqida matn...">{{ about_us }}</textarea>
+            <small class="text-muted">Bu matn Flutter ilovasining "Biz haqimizda" sahifasida ko'rinadi</small>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>Saqlash
+        </button>
+    </form>
+</div>
+
+<!-- Developer & Theme Settings -->
+<div class="card-modern mb-4">
+    <h5 class="mb-4"><i class="fas fa-code me-2"></i>Developer va Tema Sozlamalari</h5>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save_app_info">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Developer nomi</label>
+                <input type="text" name="developer_name" class="form-control" value="{{ developer_name }}" placeholder="Developer">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Developer card raqami</label>
+                <input type="text" name="developer_card" class="form-control" value="{{ developer_card }}" placeholder="9860 1234 5678 9012">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Avtomatik qorong'i rejim (vaqt)</label>
+                <input type="text" name="auto_dark_mode" class="form-control" value="{{ auto_dark_mode }}" placeholder="20:00">
+                <small class="text-muted">Masalan: 20:00 - bu vaqtdan keyin qorong'i rejim</small>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Standart til</label>
+                <select name="default_language" class="form-control">
+                    <option value="uz" {% if default_language == 'uz' %}selected{% endif %}>O'zbekcha</option>
+                    <option value="ru" {% if default_language == 'ru' %}selected{% endif %}>Ruscha</option>
+                    <option value="en" {% if default_language == 'en' %}selected{% endif %}>Ingilizcha</option>
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>Saqlash
+        </button>
+    </form>
+</div>
+
+<!-- Dasturchiga Qahva -->
+<div class="card-modern mb-4">
+    <h5 class="mb-4"><i class="fas fa-coffee me-2"></i>Dasturchiga Qahva Sotib Oling</h5>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save_app_info">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Developer nomi</label>
+                <input type="text" name="developer_name" class="form-control" value="{{ developer_name }}" placeholder="Developer">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Karta raqami</label>
+                <input type="text" name="developer_card" class="form-control" value="{{ developer_card }}" placeholder="9860 1234 5678 9012">
+                <small class="text-muted">Click ilovasida foydalanuvchilarga ko'rsatiladi</small>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>Saqlash
+        </button>
+    </form>
+</div>
+
+<!-- Search Background -->
+<div class="card-modern mb-4">
+    <h5 class="mb-4"><i class="fas fa-palette me-2"></i>Qidiruv foni rangini o'zgartirish</h5>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save_search_bg">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Rang kodi</label>
+                <input type="text" name="search_background" class="form-control" value="{{ search_background }}" placeholder="#e74c3c">
+                <small class="text-muted">Masalan: #FF0000 (qizil), #3498db (ko'k), #27ae60 (yashil)</small>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Namuna</label>
+                <div style="height: 50px; background-color: {{ search_background|default:'#e74c3c' }}; border-radius: 8px;"></div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>Saqlash
+        </button>
+    </form>
+</div>
+
+<!-- Legal Links -->
+<div class="card-modern mb-4">
+    <h5 class="mb-4"><i class="fas fa-link me-2"></i>Huquqiy havolalar</h5>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save_links">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Foydalanish shartlari URL</label>
+                <input type="url" name="terms_url" class="form-control" value="{{ terms_url }}" placeholder="https://...">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Maxfiylik siyosati URL</label>
+                <input type="url" name="privacy_url" class="form-control" value="{{ privacy_url }}" placeholder="https://...">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>Saqlash
+        </button>
+    </form>
+</div>
+
+<!-- Social Media -->
+<div class="card-modern mb-4">
+    <h5 class="mb-4"><i class="fas fa-share-alt me-2"></i>Ijtimoiy tarmoqlar havolalari</h5>
+    <p class="text-muted mb-3">Foydalanuvchilar bu havolalar orqali ijtimoiy tarmoqlaringizga bog'lanishlari mumkin</p>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save_social">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label"><i class="fab fa-instagram me-2"></i>Instagram</label>
+                <input type="url" name="instagram_url" class="form-control" value="{{ instagram_url }}" placeholder="https://instagram.com/yourpage">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label"><i class="fab fa-telegram me-2"></i>Telegram</label>
+                <input type="url" name="telegram_url" class="form-control" value="{{ telegram_url }}" placeholder="https://t.me/yourchannel">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label"><i class="fab fa-facebook me-2"></i>Facebook</label>
+                <input type="url" name="facebook_url" class="form-control" value="{{ facebook_url }}" placeholder="https://facebook.com/yourpage">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label"><i class="fab fa-youtube me-2"></i>YouTube</label>
+                <input type="url" name="youtube_url" class="form-control" value="{{ youtube_url }}" placeholder="https://youtube.com/@yourchannel">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>Saqlash
+        </button>
+    </form>
+</div>
+
+<!-- Preview -->
+<div class="card-modern">
+    <h5 class="mb-4"><i class="fas fa-eye me-2"></i>Ilova ko'rinishi (About Us)</h5>
+    <div class="p-3 bg-light rounded">
+        <p class="mb-1"><strong>{{ app_name }}</strong></p>
+        <p class="text-muted">{{ about_us|default:"Bu yerda ilova haqida matn bo'ladi..." }}</p>
+        {% if contact_phone or contact_email %}
+        <hr>
+        <p class="mb-1"><small>📞 {{ contact_phone }}</small></p>
+        <p class="mb-0"><small>✉️ {{ contact_email }}</small></p>
+        {% endif %}
+        {% if instagram_url or telegram_url or facebook_url or youtube_url %}
+        <hr>
+        <div class="d-flex gap-2">
+            {% if instagram_url %}<a href="{{ instagram_url }}" target="_blank" class="btn btn-sm btn-outline-dark"><i class="fab fa-instagram"></i></a>{% endif %}
+            {% if telegram_url %}<a href="{{ telegram_url }}" target="_blank" class="btn btn-sm btn-outline-dark"><i class="fab fa-telegram"></i></a>{% endif %}
+            {% if facebook_url %}<a href="{{ facebook_url }}" target="_blank" class="btn btn-sm btn-outline-dark"><i class="fab fa-facebook"></i></a>{% endif %}
+            {% if youtube_url %}<a href="{{ youtube_url }}" target="_blank" class="btn btn-sm btn-outline-dark"><i class="fab fa-youtube"></i></a>{% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Super Admin Profile -->
+<div class="card-modern mb-4">
+    <h5 class="mb-4"><i class="fas fa-user-shield me-2"></i>Super Admin hisobi</h5>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save_superadmin">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Login</label>
+                <input type="text" class="form-control" value="{{ superadmin_username }}" disabled>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Joriy parol</label>
+                <input type="password" name="current_password" class="form-control">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Yangi parol</label>
+                <input type="password" name="new_password" class="form-control">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Yangi parolni tasdiqlash</label>
+                <input type="password" name="confirm_password" class="form-control">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-warning">
+            <i class="fas fa-key me-2"></i>Parolni o'zgartirish
+        </button>
+    </form>
+</div>
+
+<!-- App Logo & Version -->
+<div class="card-modern mb-4">
+    <h5 class="mb-4"><i class="fas fa-image me-2"></i>Ilova logotipi va versiyasi</h5>
+    
+    <!-- File Upload for Logo -->
+    <form method="POST" enctype="multipart/form-data" class="mb-4" id="logoForm">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="upload_logo">
+        <div class="row">
+            <div class="col-md-8 mb-3">
+                <label class="form-label"><i class="fas fa-upload me-2"></i>Logotipni kompyuterdan yuklash</label>
+                <input type="file" name="logo_file" class="form-control" accept="image/*" onchange="document.getElementById('logoForm').submit();">
+            </div>
+            <div class="col-md-4 mb-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-upload me-2"></i>Yuklash
+                </button>
+            </div>
+        </div>
+    </form>
+    
+    <!-- File Upload for Home Background -->
+    <form method="POST" enctype="multipart/form-data" class="mb-4" id="homeBgForm">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="upload_home_bg">
+        <div class="row">
+            <div class="col-md-8 mb-3">
+                <label class="form-label"><i class="fas fa-image me-2"></i>Bosh sahifa fonini kompyuterdan yuklash</label>
+                <input type="file" name="home_bg_file" class="form-control" accept="image/*" onchange="document.getElementById('homeBgForm').submit();">
+            </div>
+            <div class="col-md-4 mb-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-upload me-2"></i>Yuklash
+                </button>
+            </div>
+        </div>
+    </form>
+    
+    <!-- URL inputs -->
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save_app_info">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Logotip URL (yoki yuqoridan yuklang)</label>
+                <input type="url" name="app_logo_url" class="form-control" value="{{ app_logo_url }}" placeholder="https://example.com/logo.png">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Ilova versiyasi</label>
+                <input type="text" name="app_version" class="form-control" value="{{ app_version }}" placeholder="1.0.0">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Bosh sahifa foni URL</label>
+                <input type="url" name="home_background" class="form-control" value="{{ home_background }}" placeholder="https://example.com/bg.jpg">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Logotip namuna</label>
+                {% if app_logo_url %}
+                <img src="{{ app_logo_url }}" style="height: 100px; border-radius: 8px;">
+                {% else %}
+                <div style="height: 100px; background: #eee; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <span class="text-muted">Rasm yo'q</span>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Fon namuna</label>
+                {% if home_background %}
+                <img src="{{ home_background }}" style="height: 100px; width: 100%; border-radius: 8px; object-fit: cover;">
+                {% else %}
+                <div style="height: 100px; background: #eee; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <span class="text-muted">Fon yo'q</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>URL va Versiyani Saqlash
+        </button>
+    </form>
+</div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Ilova versiyasi</label>
+                <input type="text" name="app_version" class="form-control" value="{{ app_version }}" placeholder="1.0.0">
+                <small class="text-muted">Masalan: 1.0.0, 2.1.0</small>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Bosh sahifa orqa foni (rasm URL)</label>
+                <input type="url" name="home_background" class="form-control" value="{{ home_background }}" placeholder="https://example.com/bg.jpg">
+                <small class="text-muted">Ilova bosh sahifasida ko'rinadigan fon rasm</small>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Namuna</label>
+                {% if app_logo_url %}
+                <img src="{{ app_logo_url }}" style="height: 80px; border-radius: 8px;">
+                {% else %}
+                <div style="height: 80px; background: #eee; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <span class="text-muted">Rasm yo'q</span>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Fon namuna</label>
+                {% if home_background %}
+                <img src="{{ home_background }}" style="height: 80px; width: 100%; border-radius: 8px; object-fit: cover;">
+                {% else %}
+                <div style="height: 80px; background: #eee; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <span class="text-muted">Fon yo'q</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Namuna</label>
+                {% if app_logo_url %}
+                <img src="{{ app_logo_url }}" style="height: 80px; border-radius: 8px;">
+                {% else %}
+                <div style="height: 80px; background: #eee; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <span class="text-muted">Rasm yo'q</span>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Joriy versiya</label>
+                <div class="form-control-plaintext">
+                    <span class="badge bg-primary">{{ app_version }}</span>
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>Saqlash
+        </button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,429 @@
+{% extends 'admins/base.html' %}
+
+{% block title %}Restoranlar - LocEats Admin{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4><i class="fas fa-utensils"></i> Restoranlar</h4>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRestaurantModal">
+        <i class="fas fa-plus"></i> Restoran Qo'shish
+    </button>
+</div>
+
+<!-- Search -->
+<div class="card-modern mb-3">
+    <form method="GET" class="d-flex">
+        <input type="text" name="search" class="form-control me-2" placeholder="Qidirish..." value="{{ search }}">
+        <button type="submit" class="btn btn-primary">Qidirish</button>
+        {% if search %}
+        <a href="/admin-panel/restaurants/" class="btn btn-secondary ms-2">Tozalash</a>
+        {% endif %}
+    </form>
+</div>
+
+<div class="table-modern">
+    <table class="table table-hover mb-0">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nomi</th>
+                <th>Manzil</th>
+                <th>Telefon</th>
+                <th>Kategoriya</th>
+                <th>Rating</th>
+                <th>Admin</th>
+                <th>Amallar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for restaurant in restaurants %}
+            <tr>
+                <td>{{ restaurant.id }}</td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        {% if restaurant.image %}
+                        <img src="{{ restaurant.image.url }}" alt="" style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px;" class="me-2">
+                        {% else %}
+                        <div class="bg-light rounded me-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-utensils text-muted"></i>
+                        </div>
+                        {% endif %}
+                        {{ restaurant.name }}
+                    </div>
+                </td>
+                <td>{{ restaurant.address|truncatechars:25 }}</td>
+                <td>{{ restaurant.phone }}</td>
+                <td>{{ restaurant.category.name|default:"-" }}</td>
+                <td>
+                    <span class="badge bg-warning text-dark">⭐ {{ restaurant.rating }}</span>
+                </td>
+                <td>
+                    {% if restaurant.admin %}
+                        <span class="badge bg-success">{{ restaurant.admin.full_name }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Admin yo'q</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="editRestaurant({{ restaurant.id }})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteRestaurant({{ restaurant.id }})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center py-5">
+                    <i class="fas fa-utensils fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Restoranlar yo'q</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Add Restaurant Modal -->
+<div class="modal fade" id="addRestaurantModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #e74c3c; color: white;">
+                <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Yangi Restoran</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/admin-panel/restaurants/" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Restoran nomi *</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Telefon *</label>
+                            <input type="text" class="form-control" name="phone" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Manzil *</label>
+                            <input type="text" class="form-control" name="address" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Kategoriya</label>
+                            <select class="form-select" name="category">
+                                <option value="">Tanlang...</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Rating</label>
+                            <input type="number" class="form-control" name="rating" value="4.0" step="0.1" min="0" max="5">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Joylashuv (xaritadan tanlang) *</label>
+                            <div id="addMap" style="height: 250px; border-radius: 10px; margin-bottom: 10px;"></div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <input type="text" class="form-control" name="latitude" id="add_latitude" placeholder="Latitude" value="39.6542" required>
+                                </div>
+                                <div class="col-6">
+                                    <input type="text" class="form-control" name="longitude" id="add_longitude" placeholder="Longitude" value="66.9597" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Tavsif</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Rasm</label>
+                            <input type="file" class="form-control" name="image" accept="image/*">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Restaurant Modal -->
+<div class="modal fade" id="editRestaurantModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #3498db; color: white;">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Restoranni Tahrirlash</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="editRestaurantForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="id" id="edit_restaurant_id">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Restoran nomi *</label>
+                            <input type="text" class="form-control" name="name" id="edit_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Telefon *</label>
+                            <input type="text" class="form-control" name="phone" id="edit_phone" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Manzil *</label>
+                            <input type="text" class="form-control" name="address" id="edit_address" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Kategoriya</label>
+                            <select class="form-select" name="category" id="edit_category">
+                                <option value="">Tanlang...</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Rating</label>
+                            <input type="number" class="form-control" name="rating" id="edit_rating" value="4.0" step="0.1" min="0" max="5">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Joylashuv (xaritadan tanlang) *</label>
+                            <div id="editMap" style="height: 250px; border-radius: 10px; margin-bottom: 10px;"></div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <input type="text" class="form-control" name="latitude" id="edit_latitude" placeholder="Latitude" required>
+                                </div>
+                                <div class="col-6">
+                                    <input type="text" class="form-control" name="longitude" id="edit_longitude" placeholder="Longitude" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Admin</label>
+                            <select class="form-select" name="admin" id="edit_admin">
+                                <option value="">Admin yo'q</option>
+                                {% for admin in admins %}
+                                <option value="{{ admin.id }}">{{ admin.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Hozirgi rasm</label>
+                            <div id="current_image_preview" style="width: 100px; height: 100px; border-radius: 8px; overflow: hidden; border: 2px solid #ddd;">
+                                <!-- Current image will be shown here -->
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Yangi rasm yuklash (o'zgartirish uchun tanlang)</label>
+                            <input type="file" class="form-control" name="image" accept="image/*" id="edit_image">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Tavsif</label>
+                            <textarea class="form-control" name="description" id="edit_description" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor qilish</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Restaurant data for editing
+const restaurantData = {
+    {% for rest in restaurants %}
+    {{ rest.id }}: {
+        id: {{ rest.id }},
+        name: "{{ rest.name|escapejs }}",
+        phone: "{{ rest.phone|escapejs }}",
+        address: "{{ rest.address|escapejs }}",
+        description: "{{ rest.description|escapejs }}",
+        rating: "{{ rest.rating }}",
+        latitude: "{{ rest.latitude|default:'' }}",
+        longitude: "{{ rest.longitude|default:'' }}",
+        category_id: {% if rest.category %}{{ rest.category.id }}{% else %}null{% endif %},
+        admin_id: {% if rest.admin %}{{ rest.admin.id }}{% else %}null{% endif %},
+        image_url: "{% if rest.image %}{{ rest.image.url }}{% else %}{% endif %}"
+    },
+    {% endfor %}
+};
+
+let addMapInstance = null;
+let editMapInstance = null;
+let addMapMarker = null;
+let editMapMarker = null;
+
+function initAddMap() {
+    setTimeout(function() {
+        const mapContainer = document.getElementById('addMap');
+        if (!mapContainer) return;
+        
+        const lat = parseFloat(document.getElementById('add_latitude').value) || 39.6542;
+        const lng = parseFloat(document.getElementById('add_longitude').value) || 66.9597;
+        
+        if (addMapInstance) {
+            addMapInstance.remove();
+        }
+        
+        addMapInstance = L.map('addMap').setView([lat, lng], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(addMapInstance);
+        
+        addMapMarker = L.marker([lat, lng], {draggable: true}).addTo(addMapInstance);
+        addMapMarker.on('dragend', function(e) {
+            const pos = e.target.getLatLng();
+            document.getElementById('add_latitude').value = pos.lat.toFixed(6);
+            document.getElementById('add_longitude').value = pos.lng.toFixed(6);
+        });
+        
+        addMapInstance.on('click', function(e) {
+            document.getElementById('add_latitude').value = e.latlng.lat.toFixed(6);
+            document.getElementById('add_longitude').value = e.latlng.lng.toFixed(6);
+            if (addMapMarker) {
+                addMapInstance.removeLayer(addMapMarker);
+            }
+            addMapMarker = L.marker(e.latlng, {draggable: true}).addTo(addMapInstance);
+            addMapMarker.on('dragend', function(ev) {
+                const pos = ev.target.getLatLng();
+                document.getElementById('add_latitude').value = pos.lat.toFixed(6);
+                document.getElementById('add_longitude').value = pos.lng.toFixed(6);
+            });
+        });
+        
+        setTimeout(function() { addMapInstance.invalidateSize(); }, 200);
+    }, 100);
+}
+
+function initEditMapFunction() {
+    setTimeout(function() {
+        const mapContainer = document.getElementById('editMap');
+        if (!mapContainer) return;
+        
+        const lat = parseFloat(document.getElementById('edit_latitude').value) || 39.6542;
+        const lng = parseFloat(document.getElementById('edit_longitude').value) || 66.9597;
+        
+        if (editMapInstance) {
+            editMapInstance.remove();
+        }
+        
+        editMapInstance = L.map('editMap').setView([lat, lng], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(editMapInstance);
+        
+        editMapMarker = L.marker([lat, lng], {draggable: true}).addTo(editMapInstance);
+        editMapMarker.on('dragend', function(e) {
+            const pos = e.target.getLatLng();
+            document.getElementById('edit_latitude').value = pos.lat.toFixed(6);
+            document.getElementById('edit_longitude').value = pos.lng.toFixed(6);
+        });
+        
+        editMapInstance.on('click', function(e) {
+            document.getElementById('edit_latitude').value = e.latlng.lat.toFixed(6);
+            document.getElementById('edit_longitude').value = e.latlng.lng.toFixed(6);
+            if (editMapMarker) {
+                editMapInstance.removeLayer(editMapMarker);
+            }
+            editMapMarker = L.marker(e.latlng, {draggable: true}).addTo(editMapInstance);
+            editMapMarker.on('dragend', function(ev) {
+                const pos = ev.target.getLatLng();
+                document.getElementById('edit_latitude').value = pos.lat.toFixed(6);
+                document.getElementById('edit_longitude').value = pos.lng.toFixed(6);
+            });
+        });
+        
+        setTimeout(function() { editMapInstance.invalidateSize(); }, 200);
+    }, 100);
+}
+
+function editRestaurant(id) {
+    const rest = restaurantData[id];
+    if (!rest) return;
+    
+    document.getElementById('edit_restaurant_id').value = rest.id;
+    document.getElementById('edit_name').value = rest.name;
+    document.getElementById('edit_phone').value = rest.phone;
+    document.getElementById('edit_address').value = rest.address;
+    document.getElementById('edit_description').value = rest.description;
+    document.getElementById('edit_rating').value = rest.rating;
+    document.getElementById('edit_latitude').value = rest.latitude || '39.6542';
+    document.getElementById('edit_longitude').value = rest.longitude || '66.9597';
+    
+    const categorySelect = document.getElementById('edit_category');
+    if (rest.category_id) {
+        categorySelect.value = rest.category_id;
+    } else {
+        categorySelect.value = '';
+    }
+    
+    const adminSelect = document.getElementById('edit_admin');
+    if (rest.admin_id) {
+        adminSelect.value = rest.admin_id;
+    } else {
+        adminSelect.value = '';
+    }
+    
+    const imagePreview = document.getElementById('current_image_preview');
+    if (rest.image_url) {
+        imagePreview.innerHTML = '<img src="' + rest.image_url + '" style="width: 100%; height: 100%; object-fit: cover;">';
+    } else {
+        imagePreview.innerHTML = '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f8f9fa;"><i class="fas fa-utensils text-muted"></i></div>';
+    }
+    
+    document.getElementById('edit_image').value = '';
+    document.getElementById('editRestaurantForm').action = '/admin-panel/restaurants/update/' + id + '/';
+    
+    var modal = new bootstrap.Modal(document.getElementById('editRestaurantModal'));
+    modal.show();
+    
+    modal._element.addEventListener('shown.bs.modal', function handler() {
+        initEditMapFunction();
+        modal._element.removeEventListener('shown.bs.modal', handler);
+    });
+}
+
+document.getElementById('addRestaurantModal').addEventListener('shown.bs.modal', function () {
+    initAddMap();
+});
+
+document.getElementById('editRestaurantModal').addEventListener('shown.bs.modal', function () {
+    initEditMapFunction();
+});
+
+document.getElementById('edit_image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('current_image_preview');
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = '<img src="' + e.target.result + '" style="width: 100%; height: 100%; object-fit: cover;">';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+function deleteRestaurant(id) {
+    if (confirm('Restoranni o\'chirishni tasdiqlaysizmi?')) {
+        fetch('/admin-panel/restaurants/delete/' + id + '/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        }).then(() => location.reload());
+    }
+}
+</script>
+{% endblock %}

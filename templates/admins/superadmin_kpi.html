@@ -1,0 +1,166 @@
+{% extends 'admins/base.html' %}
+
+{% block title %}KPI - LocEats Admin{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4><i class="fas fa-chart-line"></i> KPI - Umumiy Ko'rsatkichlar</h4>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card-stat">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <small class="text-muted">Oylik Tushum</small>
+                    <h3 class="mb-0">{{ kpi.month_revenue|floatformat:0 }} so'm</h3>
+                </div>
+                <div class="icon" style="background: rgba(46, 204, 113, 0.1); color: #27ae60;">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-stat">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <small class="text-muted">Oylik Xarajat</small>
+                    <h3 class="mb-0">{{ kpi.month_expenses|floatformat:0 }} so'm</h3>
+                </div>
+                <div class="icon" style="background: rgba(231, 76, 60, 0.1); color: #e74c3c;">
+                    <i class="fas fa-wallet"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-stat">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <small class="text-muted">Oylik Foyda</small>
+                    <h3 class="mb-0">{{ kpi.month_profit|floatformat:0 }} so'm</h3>
+                </div>
+                <div class="icon" style="background: rgba(52, 152, 219, 0.1); color: #3498db;">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+            </div>
+            <small class="text-success">{{ kpi.month_profit_margin }}% margina</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-stat">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <small class="text-muted">Yillik Tushum</small>
+                    <h3 class="mb-0">{{ kpi.year_revenue|floatformat:0 }} so'm</h3>
+                </div>
+                <div class="icon" style="background: rgba(155, 89, 182, 0.1); color: #9b59b6;">
+                    <i class="fas fa-calendar"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card-stat">
+            <small class="text-muted">Jami Restoranlar</small>
+            <h3 class="mb-0">{{ kpi.total_restaurants }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-stat">
+            <small class="text-muted">Aktiv Adminlar</small>
+            <h3 class="mb-0">{{ kpi.total_admins }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-stat">
+            <small class="text-muted">Oylik Buyurtmalar</small>
+            <h3 class="mb-0">{{ kpi.month_orders }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-stat">
+            <small class="text-muted">O'rtacha Chek</small>
+            <h3 class="mb-0">{{ kpi.month_avg_check|floatformat:0 }} so'm</h3>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card-stat">
+            <small class="text-muted">Jami Xodimlar</small>
+            <h3 class="mb-0">{{ kpi.total_staff }}</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card-stat">
+            <small class="text-muted">Jami Oyliklar</small>
+            <h3 class="mb-0">{{ kpi.total_salary|floatformat:0 }} so'm</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card-stat">
+            <small class="text-muted">Ishchilar Ulushi</small>
+            <h3 class="mb-0">{{ kpi.salary_percent }}%</h3>
+        </div>
+    </div>
+</div>
+
+<div class="top-bar">
+    <h4><i class="fas fa-utensils"></i> Restoranlar Bo'yicha KPI</h4>
+</div>
+
+<div class="table-modern">
+    <table class="table table-hover mb-0">
+        <thead>
+            <tr>
+                <th>Restoran</th>
+                <th>Oylik Tushum</th>
+                <th>Oylik Xarajat</th>
+                <th>Foyda</th>
+                <th>Rating</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in restaurant_kpis %}
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center">
+                        {% if item.restaurant.image %}
+                        <img src="{{ item.restaurant.image.url }}" alt="" style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px;" class="me-2">
+                        {% else %}
+                        <div class="bg-light rounded me-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-utensils text-muted"></i>
+                        </div>
+                        {% endif %}
+                        {{ item.restaurant.name }}
+                    </div>
+                </td>
+                <td>{{ item.month_revenue|floatformat:0 }} so'm</td>
+                <td>{{ item.month_expenses|floatformat:0 }} so'm</td>
+                <td>
+                    {% if item.profit > 0 %}
+                    <span class="text-success">+{{ item.profit|floatformat:0 }} so'm</span>
+                    {% else %}
+                    <span class="text-danger">{{ item.profit|floatformat:0 }} so'm</span>
+                    {% endif %}
+                </td>
+                <td><span class="badge bg-warning text-dark">⭐ {{ item.rating|floatformat:1 }}</span></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center py-5">
+                    <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Ma'lumot yo'q</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

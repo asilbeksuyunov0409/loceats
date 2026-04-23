@@ -1,0 +1,117 @@
+{% extends 'admins/restaurant_base.html' %}
+
+{% block title %}{{ restaurant.name }} - Chat{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-success" id="successMsg" style="display:none;">
+                <i class="fas fa-check-circle"></i> Xabar yuborildi!
+            </div>
+            
+            <div class="card-modern">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-comments me-2"></i>Super Admin bilan suhbat</h5>
+                </div>
+                <div class="card-body chat-body" id="chatMessages" style="height: 400px; overflow-y: auto;">
+                    {% for msg in messages %}
+                    <div class="mb-3 {% if msg.sender_type == 'restaurant' %}text-end{% endif %}">
+                        <div class="d-inline-block p-3 rounded {% if msg.sender_type == 'restaurant' %}bg-primary text-white{% else %}bg-light{% endif %}" 
+                             style="max-width: 80%;">
+                            <small class="{% if msg.sender_type == 'restaurant' %}text-white-50{% else %}text-muted{% endif %}">
+                                {{ msg.sender_name }} - {{ msg.created_at|date:"H:i" }}
+                            </small>
+                            <p class="mb-0 mt-1">{{ msg.message }}</p>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center text-muted" id="noMsg">Xabarlar yo'q. Suhbatni boshlang!</p>
+                    {% endfor %}
+                </div>
+                <div class="card-footer">
+                    <input type="text" id="msgInput" class="form-control" placeholder="Xabar yozing va Enter bosing..." autocomplete="off">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.chat-body::-webkit-scrollbar { width: 8px; }
+.chat-body::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var input = document.getElementById('msgInput');
+    var chatBody = document.getElementById('chatMessages');
+    
+    if (input && chatBody) {
+        chatBody.scrollTop = chatBody.scrollHeight;
+        
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && input.value.trim()) {
+                e.preventDefault();
+                var msg = input.value.trim();
+                input.value = ''; // Clear input immediately
+                sendMessage(msg);
+            }
+        });
+        
+        input.focus();
+    }
+    
+    function sendMessage(msg) {
+        var csrf = '{{ csrf_token }}';
+        var successMsg = document.getElementById('successMsg');
+        var noMsg = document.getElementById('noMsg');
+        
+        successMsg.style.display = 'block';
+        successMsg.textContent = 'Xabar yuborilmoqda...';
+        
+        fetch('', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrf
+            },
+            body: 'message=' + encodeURIComponent(msg),
+            credentials: 'same-origin'
+        })
+        .then(r => r.text())
+        .then(html => {
+            successMsg.textContent = 'Xabar yuborildi!';
+            successMsg.className = 'alert alert-success';
+            setTimeout(function() {
+                successMsg.style.display = 'none';
+            }, 2000);
+            // Reload page to show new message
+            location.reload();
+        })
+        .catch(err => {
+            successMsg.textContent = 'Xatolik!';
+            successMsg.className = 'alert alert-danger';
+            console.error(err);
+        });
+    }
+    
+    setInterval(function() {
+        fetch('', {method: 'GET', credentials: 'same-origin'})
+        .then(r => r.text())
+        .then(html => {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            var newMsgs = doc.getElementById('chatMessages');
+            if (newMsgs && chatBody) {
+                chatBody.innerHTML = newMsgs.innerHTML;
+            }
+        });
+    }, 20000);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends 'admins/restaurant_base.html' %}
+
+{% block extra_css %}
+<style>
+    .bg-purple { background-color: #9b59b6 !important; }
+    .text-purple { color: #9b59b6 !important; }
+</style>
+{% endblock %}
+
+{% block title %}{{ restaurant.name }} - Buyurtmalar{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="fas fa-clipboard-list me-2"></i>Buyurtmalar va Bronlar</h4>
+</div>
+
+<div class="card-modern mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Buyurtmalar ro'yxati</h5>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-modern mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Mijoz</th>
+                    <th>Telefon</th>
+                    <th>Stol</th>
+                    <th>Vaqt</th>
+                    <th>Mehmonlar</th>
+                    <th>Tadbir</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in all_bookings %}
+                <tr {% if item.is_event %}style="background-color: rgba(155, 89, 182, 0.1);"{% endif %}>
+                    <td>
+                        {% if item.type == 'booking' %}
+                        <span class="badge bg-info">#B{{ item.id }}</span>
+                        {% else %}
+                        <span class="badge bg-warning">#O{{ item.id }}</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ item.user_name }}</strong></td>
+                    <td>{{ item.phone }}</td>
+                    <td>{{ item.table }}</td>
+                    <td>{{ item.date_time }}</td>
+                    <td>{{ item.guest_count }}</td>
+                    <td>
+                        {% if item.is_event %}
+                        <span class="badge bg-purple">
+                            <i class="fas fa-star"></i> Tadbir
+                        </span>
+                        <br><small class="text-purple">{{ item.event_title }}</small>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.status == 'pending' %}
+                        <span class="badge bg-warning text-dark">Kutilmoqda</span>
+                        {% elif item.status == 'confirmed' %}
+                        <span class="badge bg-success">Tasdiqlangan</span>
+                        {% elif item.status == 'preparing' %}
+                        <span class="badge bg-info">Tayyorlanmoqda</span>
+                        {% elif item.status == 'ready' %}
+                        <span class="badge bg-success">Tayyor</span>
+                        {% elif item.status == 'delivered' %}
+                        <span class="badge bg-secondary">Yetkazildi</span>
+                        {% elif item.status == 'cancelled' %}
+                        <span class="badge bg-danger">Bekor</span>
+                        {% else %}
+                        <span class="badge bg-primary">{{ item.status }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-2x mb-2 d-block text-muted"></i>
+                        Buyurtmalar yo'q
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

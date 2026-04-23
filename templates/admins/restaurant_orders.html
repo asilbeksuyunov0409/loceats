@@ -1,0 +1,180 @@
+{% extends 'admins/restaurant_base.html' %}
+
+{% block title %}Buyurtmalar - {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="fas fa-shopping-bag me-2"></i>Buyurtmalar</h4>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="icon d-inline-flex rounded-circle bg-warning text-white mb-2" style="width: 50px; height: 50px; align-items: center; justify-content: center;">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h3 class="mb-1">{{ pending_orders }}</h3>
+            <small class="text-muted">Kutilmoqda</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="icon d-inline-flex rounded-circle bg-info text-white mb-2" style="width: 50px; height: 50px; align-items: center; justify-content: center;">
+                <i class="fas fa-check"></i>
+            </div>
+            <h3 class="mb-1">{{ confirmed_orders }}</h3>
+            <small class="text-muted">Qabul qilingan</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="icon d-inline-flex rounded-circle bg-primary text-white mb-2" style="width: 50px; height: 50px; align-items: center; justify-content: center;">
+                <i class="fas fa-fire"></i>
+            </div>
+            <h3 class="mb-1">{{ preparing_orders }}</h3>
+            <small class="text-muted">Tayyorlanmoqda</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="icon d-inline-flex rounded-circle bg-success text-white mb-2" style="width: 50px; height: 50px; align-items: center; justify-content: center;">
+                <i class="fas fa-utensils"></i>
+            </div>
+            <h3 class="mb-1">{{ ready_orders }}</h3>
+            <small class="text-muted">Tayyor</small>
+        </div>
+    </div>
+</div>
+
+{% if orders %}
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Vaqt</th>
+                <th>Bron vaqti</th>
+                <th>Mijoz</th>
+                <th>Stol</th>
+                <th>Taomlar</th>
+                <th>Summa</th>
+                <th>Status</th>
+                <th>Amallar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td><strong>#{{ order.id }}</strong></td>
+                <td>
+                    {{ order.created_at|date:"H:i" }}<br>
+                    <small class="text-muted">{{ order.created_at|date:"d.m.Y" }}</small>
+                </td>
+                <td>
+                    {% if order.booking_date_time %}
+                        <span class="text-primary">{{ order.booking_date_time|date:"d.m.Y" }}</span><br>
+                        <small class="text-muted">{{ order.booking_date_time|date:"H:i" }}</small>
+                    {% else %}
+                        <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <strong>{{ order.user_name }}</strong>
+                    {% if order.phone %}<br><small>{{ order.phone }}</small>{% endif %}
+                </td>
+                <td>
+                    {% if order.table_id %}
+                    <span class="badge bg-dark">Stol {{ order.table.table_number }}</span>
+                    {% else %}
+                    <span class="badge bg-success"><i class="fas fa-motorcycle"></i> Yetkazib berish</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% with order.items.all as order_items %}
+                    {% for item in order_items|slice:":3" %}
+                    <small>{{ item.menu_item_name }} x{{ item.quantity }}</small><br>
+                    {% endfor %}
+                    {% if order_items|length > 3 %}
+                    <small class="text-muted">... va yana {{ order_items|length|add:"-3" }} ta</small>
+                    {% endif %}
+                    {% endwith %}
+                </td>
+                <td><strong class="text-success">{{ order.total_amount|floatformat:0 }} so'm</strong></td>
+                <td>
+                    {% if order.status == 'pending' %}
+                    <span class="badge bg-warning">Kutilmoqda</span>
+                    {% elif order.status == 'confirmed' %}
+                    <span class="badge bg-info">Qabul qilingan</span>
+                    {% elif order.status == 'preparing' %}
+                    <span class="badge bg-primary">Tayyorlanmoqda</span>
+                    {% elif order.status == 'ready' %}
+                    <span class="badge bg-success">Tayyor</span>
+                    {% elif order.status == 'delivered' %}
+                    <span class="badge bg-secondary">Yetkazildi</span>
+                    {% elif order.status == 'cancelled' %}
+                    <span class="badge bg-danger">Bekor</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if order.status == 'pending' %}
+                    <form method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <input type="hidden" name="action" value="confirm">
+                        <button type="submit" class="btn btn-sm btn-success">
+                            <i class="fas fa-check"></i> Qabul
+                        </button>
+                    </form>
+                    {% elif order.status == 'confirmed' %}
+                    <form method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <input type="hidden" name="action" value="preparing">
+                        <button type="submit" class="btn btn-sm btn-primary">
+                            <i class="fas fa-fire"></i> Boshlash
+                        </button>
+                    </form>
+                    {% elif order.status == 'preparing' %}
+                    <form method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <input type="hidden" name="action" value="ready">
+                        <button type="submit" class="btn btn-sm btn-success">
+                            <i class="fas fa-check"></i> Tayyor
+                        </button>
+                    </form>
+                    {% elif order.status == 'ready' %}
+                    <form method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <input type="hidden" name="action" value="delivered">
+                        <button type="submit" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-truck"></i> Yetkazildi
+                        </button>
+                    </form>
+                    {% endif %}
+                    
+                    {% if order.status != 'delivered' and order.status != 'cancelled' %}
+                    <form method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <input type="hidden" name="action" value="cancelled">
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bekor qilishni tasdiqlaysizmi?')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info text-center py-5">
+    <i class="fas fa-shopping-bag fa-4x mb-3"></i>
+    <h5>Buyurtmalar yo'q</h5>
+    <p class="text-muted">Mijozlar ilova orqali buyurtma berishlari mumkin</p>
+</div>
+{% endif %}
+{% endblock %}

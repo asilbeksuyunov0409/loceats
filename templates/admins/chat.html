@@ -1,0 +1,117 @@
+{% extends 'admins/base.html' %}
+
+{% block title %}Chat - LocEats Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Restaurant list -->
+        <div class="col-md-4 col-lg-3">
+            <div class="card-modern">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-comments me-2"></i>Restoranlar</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for rest in restaurants %}
+                        <a href="/admin-panel/chat/?restaurant_id={{ rest.id }}" 
+                           class="list-group-item list-group-item-action {% if selected_restaurant_id == rest.id %}active{% endif %}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ rest.name }}</strong>
+                                    <br><small class="text-muted">{{ rest.address|truncatechars:30 }}</small>
+                                </div>
+                                {% for ucount in unread_counts.items %}
+                                {% if rest.id == ucount.0 %}
+                                <span class="badge bg-danger">{{ ucount.1 }}</span>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat messages -->
+        <div class="col-md-8 col-lg-9">
+            {% if selected_restaurant_id %}
+            <div class="card-modern">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ selected_restaurant_name }} - Suhbat</h5>
+                </div>
+                <div class="card-body chat-body" id="chatMessages" style="height: 400px; overflow-y: auto;">
+                    {% for msg in messages %}
+                    <div class="mb-3 {% if msg.sender_type == 'superadmin' %}text-end{% endif %}">
+                        <div class="d-inline-block p-3 rounded {% if msg.sender_type == 'superadmin' %}bg-primary text-white{% else %}bg-light{% endif %}" 
+                             style="max-width: 80%;">
+                            <small class="{% if msg.sender_type == 'superadmin' %}text-white-50{% else %}text-muted{% endif %}">
+                                {{ msg.sender_name }} - {{ msg.created_at|date:"H:i" }}
+                            </small>
+                            <p class="mb-0 mt-1">{{ msg.message }}</p>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center text-muted">Xabarlar yo'q. Suhbatni boshlang!</p>
+                    {% endfor %}
+                </div>
+                <div class="card-footer">
+                    <form method="POST" class="d-flex">
+                        {% csrf_token %}
+                        <input type="hidden" name="restaurant_id" value="{{ selected_restaurant_id }}">
+                        <input type="text" name="message" id="messageInput" class="form-control me-2" placeholder="Xabar yozing..." required>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Suhbat boshlash uchun restoran tanlang
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.chat-body::-webkit-scrollbar {
+    width: 8px;
+}
+.chat-body::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function scrollToBottom() {
+    var chatDiv = document.getElementById('chatMessages');
+    if (chatDiv) {
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    scrollToBottom();
+});
+
+// Auto-refresh every 5 seconds
+setInterval(function() {
+    {% if selected_restaurant_id %}
+    var url = window.location.href;
+    if (url.indexOf('?') > -1) {
+        window.location.reload();
+    } else {
+        window.location.href = url + '?restaurant_id=' + {{ selected_restaurant_id|default:0 }};
+    }
+    {% endif %}
+}, 5000);
+</script>
+{% endblock %}

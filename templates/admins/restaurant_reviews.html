@@ -1,0 +1,207 @@
+{% extends 'admins/restaurant_base.html' %}
+
+{% block title %}Sharhlar - {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="fas fa-star me-2"></i>Sharhlar</h4>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="icon d-inline-flex rounded-circle bg-warning text-white mb-2" style="width: 50px; height: 50px; align-items: center; justify-content: center;">
+                <i class="fas fa-star"></i>
+            </div>
+            <h3 class="mb-1">{{ stats.avg_rating }}</h3>
+            <small class="text-muted">O'rtacha reyting</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="icon d-inline-flex rounded-circle bg-primary text-white mb-2" style="width: 50px; height: 50px; align-items: center; justify-content: center;">
+                <i class="fas fa-comments"></i>
+            </div>
+            <h3 class="mb-1">{{ stats.total }}</h3>
+            <small class="text-muted">Jami sharhlar</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="icon d-inline-flex rounded-circle bg-success text-white mb-2" style="width: 50px; height: 50px; align-items: center; justify-content: center;">
+                <i class="fas fa-smile"></i>
+            </div>
+            <h3 class="mb-1">{{ stats.five_stars|add:stats.four_stars }}</h3>
+            <small class="text-muted">Positive (4-5⭐)</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="icon d-inline-flex rounded-circle bg-danger text-white mb-2" style="width: 50px; height: 50px; align-items: center; justify-content: center;">
+                <i class="fas fa-frown"></i>
+            </div>
+            <h3 class="mb-1">{{ stats.one_star|add:stats.two_stars }}</h3>
+            <small class="text-muted">Negative (1-2⭐)</small>
+        </div>
+    </div>
+</div>
+
+<!-- Rating Distribution -->
+<div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-body">
+        <h6 class="mb-3">Reyting taqsimoti</h6>
+        <div class="d-flex align-items-center mb-2">
+            <span class="me-2">5⭐</span>
+            <div class="progress flex-grow-1" style="height: 20px;">
+                <div class="progress-bar bg-success" style="width: {% widthratio stats.five_stats stats.total 100 %}%"></div>
+            </div>
+            <span class="ms-2">{{ stats.five_stars }}</span>
+        </div>
+        <div class="d-flex align-items-center mb-2">
+            <span class="me-2">4⭐</span>
+            <div class="progress flex-grow-1" style="height: 20px;">
+                <div class="progress-bar bg-info" style="width: {% widthratio stats.four_stars stats.total 100 %}%"></div>
+            </div>
+            <span class="ms-2">{{ stats.four_stars }}</span>
+        </div>
+        <div class="d-flex align-items-center mb-2">
+            <span class="me-2">3⭐</span>
+            <div class="progress flex-grow-1" style="height: 20px;">
+                <div class="progress-bar bg-warning" style="width: {% widthratio stats.three_stars stats.total 100 %}%"></div>
+            </div>
+            <span class="ms-2">{{ stats.three_stars }}</span>
+        </div>
+        <div class="d-flex align-items-center mb-2">
+            <span class="me-2">2⭐</span>
+            <div class="progress flex-grow-1" style="height: 20px;">
+                <div class="progress-bar" style="width: {% widthratio stats.two_stars stats.total 100 %}%; background-color: #f39c12;"></div>
+            </div>
+            <span class="ms-2">{{ stats.two_stars }}</span>
+        </div>
+        <div class="d-flex align-items-center">
+            <span class="me-2">1⭐</span>
+            <div class="progress flex-grow-1" style="height: 20px;">
+                <div class="progress-bar bg-danger" style="width: {% widthratio stats.one_star stats.total 100 %}%"></div>
+            </div>
+            <span class="ms-2">{{ stats.one_star }}</span>
+        </div>
+    </div>
+</div>
+
+{% if reviews %}
+<div class="reviews-list">
+    {% for review in reviews %}
+    <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-circle me-3">
+                        {{ review.user_name|first|upper }}
+                    </div>
+                    <div>
+                        <h6 class="mb-0">{{ review.user_name }}</h6>
+                        <small class="text-muted">{{ review.created_at|date:"d.m.Y H:i" }}</small>
+                    </div>
+                </div>
+                <div class="rating-stars">
+                    {% for i in "12345" %}
+                    <i class="fas fa-star {% if forloop.counter <= review.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            {% if review.comment %}
+            <p class="mb-3">{{ review.comment }}</p>
+            {% endif %}
+            
+            {% if review.admin_response %}
+            <div class="admin-response">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-reply me-2 text-primary"></i>
+                    <strong class="text-primary">Admin javobi:</strong>
+                </div>
+                <p class="mb-0 text-muted">{{ review.admin_response }}</p>
+            </div>
+            {% else %}
+            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#respondModal{{ review.id }}">
+                <i class="fas fa-reply me-1"></i> Javob yozish
+            </button>
+            {% endif %}
+            
+            <form method="POST" class="d-inline ms-2">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="review_id" value="{{ review.id }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Sharhni o\'chirishni tasdiqlaysizmi?')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Respond Modal -->
+    <div class="modal fade" id="respondModal{{ review.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Javob yozish</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="respond">
+                    <input type="hidden" name="review_id" value="{{ review.id }}">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Foydalanuvchi sharhi:</label>
+                            <p class="text-muted">{{ review.comment|default:"Sharh yo'q" }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Javobingiz:</label>
+                            <textarea name="response" class="form-control" rows="4" placeholder="Foydalanuvchiga javob yozing..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor</button>
+                        <button type="submit" class="btn btn-primary">Yuborish</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info text-center py-5">
+    <i class="fas fa-star fa-4x mb-3"></i>
+    <h5>Sharhlar yo'q</h5>
+    <p class="text-muted">Hali hech qanday sharh yozilmagan</p>
+</div>
+{% endif %}
+
+<style>
+.avatar-circle {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+}
+.rating-stars {
+    font-size: 14px;
+}
+.admin-response {
+    background: #f8f9fa;
+    border-left: 3px solid #3498db;
+    padding: 12px;
+    border-radius: 0 8px 8px 0;
+    margin: 10px 0;
+}
+</style>
+{% endblock %}

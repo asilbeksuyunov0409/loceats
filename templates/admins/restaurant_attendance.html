@@ -1,0 +1,178 @@
+{% extends 'admins/restaurant_base.html' %}
+
+{% block title %}{{ restaurant.name }} - Xodimlar va Davomat{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h4><i class="fas fa-users me-2"></i>Xodimlar va Davomat - {{ today }}</h4>
+</div>
+
+<!-- Yangi xodim qo'shish -->
+<div class="card-modern mb-4">
+    <div class="card-header">
+        <i class="fas fa-user-plus me-2"></i> Yangi xodim qo'shish
+    </div>
+    <div class="card-body">
+        <form method="POST" class="row g-3">
+            {% csrf_token %}
+            <input type="hidden" name="add_employee" value="1">
+            <div class="col-md-2">
+                <input type="text" name="first_name" class="form-control" placeholder="Ism" required>
+            </div>
+            <div class="col-md-2">
+                <input type="text" name="last_name" class="form-control" placeholder="Familiya" required>
+            </div>
+            <div class="col-md-2">
+                <input type="tel" name="phone" class="form-control" placeholder="Telefon" required>
+            </div>
+            <div class="col-md-2">
+                <select name="role" class="form-select" required>
+                    <option value="">Lavozim</option>
+                    <option value="boss">Boshqaruvchi</option>
+                    <option value="chef">Oshpaz</option>
+                    <option value="waiter">Ofitsiant</option>
+                    <option value="cashier">Kassir</option>
+                    <option value="courier">Yetkazuvchi</option>
+                    <option value="cleaner">Tozalovchi</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="number" name="salary" class="form-control" placeholder="Oylik (so'm)">
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="hire_date" class="form-control" required>
+            </div>
+            <div class="col-md-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i> Qo'shish
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bugungi davomat -->
+<div class="row g-4 mb-4">
+    <div class="col-md-12">
+        <div class="card-modern">
+            <div class="card-header">
+                <i class="fas fa-clock me-2"></i> Bugungi davomat ({{ today|date:"d-m-Y" }})
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-modern mb-0">
+                    <thead>
+                        <tr>
+                            <th>Xodim</th>
+                            <th>Lavozim</th>
+                            <th>Kirish vaqti</th>
+                            <th>Chiqish vaqti</th>
+                            <th>Ishlagan soat</th>
+                            <th>Amal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in employees %}
+                        <tr>
+                            <td><strong>{{ emp.first_name }} {{ emp.last_name }}</strong></td>
+                            <td>
+                                {% if emp.role == 'boss' %}<span class="badge bg-danger">Boshqaruvchi</span>
+                                {% elif emp.role == 'chef' %}<span class="badge bg-warning text-dark">Oshpaz</span>
+                                {% elif emp.role == 'waiter' %}<span class="badge bg-success">Ofitsiant</span>
+                                {% elif emp.role == 'cashier' %}<span class="badge bg-info">Kassir</span>
+                                {% elif emp.role == 'courier' %}<span class="badge bg-primary">Yetkazuvchi</span>
+                                {% else %}<span class="badge bg-secondary">Tozalovchi</span>{% endif %}
+                            </td>
+                            <td id="checkin-{{ emp.id }}">-</td>
+                            <td id="checkout-{{ emp.id }}">-</td>
+                            <td id="hours-{{ emp.id }}">-</td>
+                            <td>
+                                {% if emp.status == 'active' %}
+                                <form method="POST" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="employee_id" value="{{ emp.id }}">
+                                    <button type="submit" name="check_in" value="1" class="btn btn-sm btn-success">
+                                        <i class="fas fa-sign-in-alt"></i> Kirish
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">Xodimlar yo'q</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Oylik statistika -->
+<div class="row g-4">
+    <div class="col-md-12">
+        <div class="card-modern">
+            <div class="card-header">
+                <i class="fas fa-calendar-alt me-2"></i> Oylik statistika ({{ today|date:"F Y" }})
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-modern mb-0">
+                    <thead>
+                        <tr>
+                            <th>Xodim</th>
+                            <th>Lavozim</th>
+                            <th>Telefon</th>
+                            <th>Ishlagan kun</th>
+                            <th>Jami soat</th>
+                            <th>Oylik ish haqi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in employee_stats %}
+                        <tr>
+                            <td><strong>{{ stat.name }}</strong></td>
+                            <td>
+                                {% if stat.role == 'boss' %}<span class="badge bg-danger">Boshqaruvchi</span>
+                                {% elif stat.role == 'chef' %}<span class="badge bg-warning text-dark">Oshpaz</span>
+                                {% elif stat.role == 'waiter' %}<span class="badge bg-success">Ofitsiant</span>
+                                {% elif stat.role == 'cashier' %}<span class="badge bg-info">Kassir</span>
+                                {% elif stat.role == 'courier' %}<span class="badge bg-primary">Yetkazuvchi</span>
+                                {% else %}<span class="badge bg-secondary">Tozalovchi</span>{% endif %}
+                            </td>
+                            <td>{{ stat.phone }}</td>
+                            <td>{{ stat.days_worked }} kun</td>
+                            <td>{{ stat.total_hours }} soat</td>
+                            <td>{{ stat.salary|floatformat:0 }} so'm</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">Xodimlar yo'q</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% for att in today_attendances %}
+    var checkinCell = document.getElementById('checkin-{{ att.employee_id }}');
+    if (checkinCell) {
+        checkinCell.textContent = '{{ att.check_in|default:"-" }}';
+    }
+    var checkoutCell = document.getElementById('checkout-{{ att.employee_id }}');
+    if (checkoutCell) {
+        checkoutCell.textContent = '{{ att.check_out|default:"-" }}';
+    }
+    var hoursCell = document.getElementById('hours-{{ att.employee_id }}');
+    if (hoursCell) {
+        hoursCell.textContent = '{{ att.hours_worked|default:"-" }}';
+    }
+    {% endfor %}
+});
+</script>
+{% endblock %}

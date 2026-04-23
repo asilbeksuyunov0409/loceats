@@ -1,0 +1,35 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('categories/', views.category_list, name='category-list'),
+    path('restaurants/', views.restaurant_list, name='restaurant-list'),
+    path('restaurants/<int:pk>/', views.RestaurantDetailView.as_view({'get': 'retrieve'}), name='restaurant-detail'),
+    path('restaurants/<int:restaurant_id>/tables/', views.table_list, name='table-list'),
+    path('restaurants/<int:restaurant_id>/menu/', views.menu_item_list, name='restaurant-menu'),
+    path('restaurants/<int:restaurant_id>/reviews/', views.review_list, name='restaurant-reviews'),
+    path('restaurants/<int:restaurant_id>/orders/', views.order_list, name='restaurant-orders'),
+    path('restaurants/<int:restaurant_id>/promotions/', views.promotion_list, name='restaurant-promotions'),
+    path('menu-categories/', views.menu_category_list, name='menu-category-list'),
+    path('menu/', views.menu_item_list, name='menu-list'),
+    path('bookings/', views.booking_list, name='booking-list'),
+    path('bookings/<int:pk>/', views.booking_detail, name='booking-detail'),
+    path('check-table-booking/', views.check_table_booking, name='check-table-booking'),
+    path('orders/', views.order_list, name='order-list'),
+    path('orders/<int:pk>/', views.order_detail, name='order-detail'),
+    path('orders/token/<str:token>/', views.order_by_token, name='order-by-token'),
+    path('orders/user/<int:user_id>/', views.user_orders, name='user-orders'),
+    path('orders/<int:order_id>/status/', views.order_status_check, name='order-status-check'),
+    path('promotions/', views.all_promotions, name='all-promotions'),
+    path('promotions/<int:restaurant_id>/', views.promotion_list, name='promotion-list'),
+    path('search/', views.search_all, name='search-all'),
+    path('settings/', views.app_settings, name='app-settings'),
+    
+    path('events/', views.event_list, name='event-list'),
+    path('events/invite/', views.event_invite, name='event-invite'),
+    path('events/checkin/', views.event_checkin, name='event-checkin'),
+    path('events/<int:event_id>/orders/', views.group_order_list, name='group-order-list'),
+    path('events/orders/submit/', views.submit_group_order, name='submit-group-order'),
+    path('invitations/', views.my_invitations, name='my-invitations'),
+    path('invitations/respond/', views.respond_invitation, name='respond-invitation'),
+]

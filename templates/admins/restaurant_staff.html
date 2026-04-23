@@ -1,0 +1,290 @@
+{% extends 'admins/restaurant_base.html' %}
+
+{% block title %}Xodimlar - {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+{% if new_staff %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <strong><i class="fas fa-check-circle me-2"></i>Yangi xodim yaratildi!</strong>
+    <p class="mb-1 mt-2">Login: <strong>{{ new_staff.username }}</strong></p>
+    <p class="mb-0">Parol: <strong>{{ new_staff.password }}</strong></p>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="fas fa-users me-2"></i>Xodimlar</h4>
+    <div>
+        <span class="badge bg-primary p-2 me-3">
+            <i class="fas fa-wallet me-1"></i> Oyliklar: {{ total_salary|floatformat:0 }} so'm
+        </span>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStaffModal">
+            <i class="fas fa-plus me-2"></i> Xodim qo'shish
+        </button>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Xodim</th>
+                <th>Lavozim</th>
+                <th>Telefon</th>
+                <th>Oylik</th>
+                <th>Login</th>
+                <th>Status</th>
+                <th>Amal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in staff %}
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="avatar bg-primary rounded-circle me-3" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                            {{ s.full_name|slice:":1" }}
+                        </div>
+                        <div>
+                            <strong>{{ s.full_name }}</strong>
+                            <br><small class="text-muted">{{ s.hire_date|date:"d.m.Y" }}</small>
+                        </div>
+                    </div>
+                </td>
+                <td><span class="badge bg-{% if s.position == 'manager' %}info{% elif s.position == 'cook' %}warning{% elif s.position == 'waiter' %}primary{% else %}secondary{% endif %}">
+                        {% if s.position == 'manager' %}Menejer{% elif s.position == 'cook' %}Oshpaz{% elif s.position == 'waiter' %}Ofitsiant{% elif s.position == 'cashir' %}Kassir{% else %}{{ s.position }}{% endif %}
+                    </span></td>
+                <td>{{ s.phone }}</td>
+                <td><strong>{{ s.salary|floatformat:0 }} so'm</strong></td>
+                <td>
+                    {% if s.username %}
+                    <span class="badge bg-success"><i class="fas fa-user me-1"></i>{{ s.username }}</span>
+                    <br><small class="text-muted">{% if s.can_manage_orders %}<i class="fas fa-shopping-cart"></i> buyurtma{% endif %}{% if s.can_manage_bookings %}{% if s.can_manage_orders %}, {% endif %}<i class="fas fa-calendar"></i> bron{% endif %}</small>
+                    {% else %}<span class="text-muted">-</span>{% endif %}
+                </td>
+                <td>
+                    <span class="badge bg-{% if s.is_active %}success{% else %}danger{% endif %}">
+                        {% if s.is_active %}Faol{% else %}Nofaol{% endif %}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-warning" onclick="editStaff('{{ s.id }}', '{{ s.full_name }}', '{{ s.position }}', '{{ s.phone }}', '{{ s.salary }}', {% if s.can_manage_orders %}true{% else %}false{% endif %}, {% if s.can_manage_bookings %}true{% else %}false{% endif %}, {% if s.is_active %}true{% else %}false{% endif %})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </td>
+            </tr>
+{% empty %}
+            <tr>
+                <td colspan="7" class="text-center py-5">
+                    <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                    <p class="text-muted">Xodimlar yo'q</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Add Staff Modal -->
+<div class="modal fade" id="addStaffModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Yangi xodim</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/restaurant-admin/{{ restaurant.id }}/staff/">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_staff">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">To'liq ism *</label>
+                        <input type="text" class="form-control" name="full_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Lavozim *</label>
+                        <select class="form-select" name="position" required onchange="updatePermissions()">
+                            <option value="">Tanlang...</option>
+                            <option value="cook">Oshpaz 🍳</option>
+                            <option value="manager">Menejer 📋</option>
+                            <option value="warehouse">Omborxonachi 📦</option>
+                        </select>
+                    </div>
+                    <div id="permissionInfo" class="alert alert-info mb-3" style="display:none;">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span id="permissionText"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Telefon *</label>
+                        <input type="text" class="form-control" name="phone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Oylik (so'm) *</label>
+                        <input type="number" class="form-control" name="salary" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Login (ixtiyoriy)</label>
+                        <input type="text" class="form-control" name="username" placeholder="Alohida kirish uchun">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Parol (ixtiyoriy)</label>
+                        <input type="password" class="form-control" name="password" placeholder="Alohida kirish uchun">
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="can_manage_orders" id="can_orders">
+                            <label class="form-check-label" for="can_orders">
+                                Buyurtmalarni boshqarish huquqi
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="can_manage_bookings" id="can_bookings">
+                            <label class="form-check-label" for="can_bookings">
+                                Bronlarni boshqarish huquqi
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="can_manage_warehouse" id="can_warehouse">
+                            <label class="form-check-label" for="can_warehouse">
+                                Mahsulotlarni boshqarish huquqi
+                            </label>
+                        </div>
+                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Staff Modal -->
+<div class="modal fade" id="editStaffModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Xodim tahrirlash</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/restaurant-admin/{{ restaurant.id }}/staff/">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="edit_staff">
+                <input type="hidden" name="staff_id" id="edit_staff_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">To'liq ism *</label>
+                        <input type="text" class="form-control" name="full_name" id="edit_full_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Lavozim *</label>
+                        <select class="form-select" name="position" id="edit_position" required>
+                            <option value="manager">Menejer</option>
+                            <option value="cook">Oshpaz</option>
+                            <option value="waiter">Ofitsiant</option>
+                            <option value="cashier">Kassir</option>
+                            <option value="security">Qo'riqchi</option>
+                            <option value="cleaner">Tozalovchi</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Telefon *</label>
+                        <input type="text" class="form-control" name="phone" id="edit_phone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Oylik (so'm) *</label>
+                        <input type="number" class="form-control" name="salary" id="edit_salary" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Yangi parol (bo'sh qoldirtsa o'zgarishsiz qoladi)</label>
+                        <input type="password" class="form-control" name="new_password" placeholder="Yangi parol">
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="can_manage_orders" id="edit_can_orders">
+                            <label class="form-check-label" for="edit_can_orders">
+                                Buyurtmalarni boshqarish huquqi
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="can_manage_bookings" id="edit_can_bookings">
+                            <label class="form-check-label" for="edit_can_bookings">
+                                Bronlarni boshqarish huquqi
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_active" id="edit_is_active">
+                            <label class="form-check-label" for="edit_is_active">
+                                Faol
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" onclick="deleteStaff()">
+                        <i class="fas fa-trash me-1"></i> O'chirish
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor</button>
+                    <button type="submit" class="btn btn-warning">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function editStaff(id, name, position, phone, salary, can_orders, can_bookings, is_active) {
+    document.getElementById('edit_staff_id').value = id;
+    document.getElementById('edit_full_name').value = name;
+    document.getElementById('edit_position').value = position;
+    document.getElementById('edit_phone').value = phone;
+    document.getElementById('edit_salary').value = salary;
+    document.getElementById('edit_can_orders').checked = can_orders;
+    document.getElementById('edit_can_bookings').checked = can_bookings;
+    document.getElementById('edit_is_active').checked = is_active;
+    
+    var modal = new bootstrap.Modal(document.getElementById('editStaffModal'));
+    modal.show();
+}
+
+function deleteStaff() {
+    if (confirm('Bu xodimni o\'chirishga ishonchingiz komilmi?')) {
+        var form = document.querySelector('#editStaffModal form');
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'action';
+        input.value = 'delete_staff';
+        form.appendChild(input);
+        form.submit();
+    }
+}
+
+function updatePermissions() {
+    var select = document.querySelector('select[name="position"]');
+    var info = document.getElementById('permissionInfo');
+    var text = document.getElementById('permissionText');
+    
+    if (!select.value) {
+        info.style.display = 'none';
+        return;
+    }
+    
+    info.style.display = 'block';
+    
+    if (select.value === 'cook') {
+        text.textContent = 'Oshpaz: Buyurtmalarni ko\'rish, holatini o\'zgartirish (pending → preparing → ready)';
+    } else if (select.value === 'manager') {
+        text.textContent = 'Menejer: Bronlarni ko\'rish va boshqarish, stollarni band/qilish';
+    } else if (select.value === 'warehouse') {
+        text.textContent = 'Omborxonachi: Mahsulotlarni kiritish va chiqarish';
+    }
+}
+</script>
+{% endblock %}

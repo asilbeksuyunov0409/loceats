@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ombor - {{ restaurant.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: #f5f6fa; }
+        .stock-low { color: #dc3545; font-weight: bold; }
+        .stock-ok { color: #198754; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark" style="background: #e74c3c;">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">
+                <i class="fas fa-warehouse me-2"></i>{{ restaurant.name }} - Ombor
+            </span>
+            <a href="/staff-login/" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-sign-out-alt"></i> Chiqish
+            </a>
+        </div>
+    </nav>
+    
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Yangi mahsulot</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="/admins/">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="add_warehouse_item">
+                            <input type="hidden" name="restaurant_id" value="{{ restaurant.id }}">
+                            <div class="mb-2">
+                                <label class="form-label small">Nomi *</label>
+                                <input type="text" name="name" class="form-control" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">Kategoriya</label>
+                                <select name="category" class="form-control">
+                                    <option value="food">Oziq-ovqat</option>
+                                    <option value="drink">Ichimliklar</option>
+                                    <option value="packaging">Qadoqlash</option>
+                                    <option value="cleaning">Tozalash</option>
+                                    <option value="other">Boshqa</option>
+                                </select>
+                            </div>
+                            <div class="row">
+                                <div class="col-6 mb-2">
+                                    <label class="form-label small">Birlik</label>
+                                    <input type="text" name="unit" class="form-control" placeholder="kg, dona, l" required>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <label class="form-label small">Miqdori</label>
+                                    <input type="number" name="quantity" step="0.01" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6 mb-2">
+                                    <label class="form-label small">Narxi (so'm)</label>
+                                    <input type="number" name="price" class="form-control">
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <label class="form-label small">Min miqdor</label>
+                                    <input type="number" name="min_quantity" step="0.01" class="form-control" value="0">
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">Yetkazuvchi</label>
+                                <input type="text" name="supplier" class="form-control">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-plus me-2"></i>Qo'shish
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-box me-2"></i>Ombordagi mahsulotlar</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nomi</th>
+                                    <th>Kategoriya</th>
+                                    <th>Miqdori</th>
+                                    <th>Narxi</th>
+                                    <th>Holat</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in warehouse_items %}
+                                <tr>
+                                    <td>{{ item.name }}</td>
+                                    <td><span class="badge bg-secondary">{{ item.get_category_display }}</span></td>
+                                    <td>{{ item.quantity }} {{ item.unit }}</td>
+                                    <td>{{ item.price }} so'm</td>
+                                    <td>
+                                        {% if item.quantity <= item.min_quantity %}
+                                        <span class="badge bg-danger">Kam</span>
+                                        {% else %}
+                                        <span class="badge bg-success">Yetarli</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">Mahsulotlar yo'q</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header bg-warning">
+                        <h5 class="mb-0"><i class="fas fa-exchange-alt me-2"></i>Kirim va Chiqim</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <form method="POST" action="/admins/">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="warehouse_in">
+                                    <input type="hidden" name="restaurant_id" value="{{ restaurant.id }}">
+                                    <h6 class="text-success"><i class="fas fa-arrow-down me-2"></i>Kirim (+)</h6>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <select name="item_id" class="form-control" required>
+                                                <option value="">Mahsulot tanlang</option>
+                                                {% for item in warehouse_items %}
+                                                <option value="{{ item.id }}">{{ item.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-3">
+                                            <input type="number" name="quantity" step="0.01" class="form-control" placeholder="Miqdor" required>
+                                        </div>
+                                        <div class="col-3">
+                                            <input type="number" name="price" class="form-control" placeholder="Narx">
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <input type="text" name="note" class="form-control" placeholder="Izoh">
+                                    </div>
+                                    <button type="submit" class="btn btn-success mt-2 w-100">
+                                        <i class="fas fa-plus me-2"></i>Kirim qo'shish
+                                    </button>
+                                </form>
+                            </div>
+                            <div class="col-md-6">
+                                <form method="POST" action="/admins/">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="warehouse_out">
+                                    <input type="hidden" name="restaurant_id" value="{{ restaurant.id }}">
+                                    <h6 class="text-danger"><i class="fas fa-arrow-up me-2"></i>Chiqim (-)</h6>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <select name="item_id" class="form-control" required>
+                                                <option value="">Mahsulot tanlang</option>
+                                                {% for item in warehouse_items %}
+                                                <option value="{{ item.id }}">{{ item.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-3">
+                                            <input type="number" name="quantity" step="0.01" class="form-control" placeholder="Miqdor" required>
+                                        </div>
+                                        <div class="col-3">
+                                            <input type="number" name="price" class="form-control" placeholder="Narx">
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <input type="text" name="note" class="form-control" placeholder="Izoh">
+                                    </div>
+                                    <button type="submit" class="btn btn-danger mt-2 w-100">
+                                        <i class="fas fa-minus me-2"></i>Chiqim qo'shish
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Oxirgi yozuvlar</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Sana</th>
+                                    <th>Mahsulot</th>
+                                    <th>Turi</th>
+                                    <th>Miqdor</th>
+                                    <th>Izoh</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in recent_entries %}
+                                <tr>
+                                    <td>{{ entry.created_at|date:"d/m H:i" }}</td>
+                                    <td>{{ entry.warehouse_item.name }}</td>
+                                    <td>
+                                        {% if entry.entry_type == 'in' %}
+                                        <span class="badge bg-success">Kirim</span>
+                                        {% elif entry.entry_type == 'out' %}
+                                        <span class="badge bg-danger">Chiqim</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Korreksiya</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ entry.quantity }}</td>
+                                    <td>{{ entry.note|default:"-" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-3">Yozuvlar yo'q</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

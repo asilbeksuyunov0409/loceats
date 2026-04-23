@@ -1,0 +1,277 @@
+{% extends 'admins/base.html' %}
+
+{% block title %}Adminlar - LocEats Admin{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4><i class="fas fa-user-tie"></i> Restoran Adminlar</h4>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAdminModal">
+        <i class="fas fa-plus"></i> Admin Qo'shish
+    </button>
+</div>
+
+<!-- Search -->
+<div class="card-modern mb-3">
+    <form method="GET" class="d-flex">
+        <input type="text" name="search" class="form-control me-2" placeholder="Qidirish..." value="{{ search }}">
+        <button type="submit" class="btn btn-primary">Qidirish</button>
+        {% if search %}
+        <a href="/admin-panel/admins/" class="btn btn-secondary ms-2">Tozalash</a>
+        {% endif %}
+    </form>
+</div>
+
+<div class="table-modern">
+    <table class="table table-hover mb-0">
+        <thead>
+            <tr>
+                <th>Admin</th>
+                <th>Email</th>
+                <th>Telefon</th>
+                <th>Restoran</th>
+                <th>Status</th>
+                <th>Oxirgi kirish</th>
+                <th>Amallar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for admin in admins %}
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="avatar bg-primary rounded-circle me-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                            {{ admin.full_name|slice:":1" }}
+                        </div>
+                        <div>
+                            <strong>{{ admin.full_name }}</strong><br>
+                            <small class="text-muted">@{{ admin.username }}</small>
+                        </div>
+                    </div>
+                </td>
+                <td>{{ admin.email }}</td>
+                <td>{{ admin.phone }}</td>
+                <td>
+                    {% if admin.restaurant %}
+                        <span class="badge bg-info">{{ admin.restaurant.name }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Biriktirilmagan</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="badge badge-{{ admin.status }}">{{ admin.get_status_display }}</span>
+                </td>
+                <td>
+                    {% if admin.last_login %}
+                        {{ admin.last_login|date:"d.m.Y H:i" }}
+                    {% else %}
+                        <span class="text-muted">Kirilmagan</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="editAdmin({{ admin.id }})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-{% if admin.is_active %}warning{% else %}success{% endif %}" onclick="toggleAdmin({{ admin.id }}, {{ admin.is_active|yesno:"true,false" }})">
+                            <i class="fas fa-{% if admin.is_active %}ban{% else %}check{% endif %}"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteAdmin({{ admin.id }})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Adminlar yo'q</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Add Admin Modal -->
+<div class="modal fade" id="addAdminModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #e74c3c; color: white;">
+                <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Yangi Admin</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/admin-panel/admins/create/">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">To'liq ism *</label>
+                        <input type="text" class="form-control" name="full_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Username *</label>
+                        <input type="text" class="form-control" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Telefon *</label>
+                        <input type="text" class="form-control" name="phone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Parol *</label>
+                        <input type="password" class="form-control" name="password" minlength="6" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Restoran</label>
+                        <select class="form-select" name="restaurant">
+                            <option value="">Tanlang...</option>
+                            {% for rest in restaurants %}
+                            <option value="{{ rest.id }}">{{ rest.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" name="status">
+                            <option value="active">Faol</option>
+                            <option value="pending">Kutilmoqda</option>
+                            <option value="blocked">Bloklangan</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <input type="checkbox" name="can_add_promotion" value="1"> Aksiya qo'shish ruxsatini berish
+                        </label>
+                        <small class="text-muted d-block">Bu admin menyuga aksiya qo'sha oladi</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Admin Modal -->
+<div class="modal fade" id="editAdminModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #3498db; color: white;">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Adminni Tahrirlash</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="editAdminForm">
+                {% csrf_token %}
+                <input type="hidden" name="id" id="edit_admin_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">To'liq ism *</label>
+                        <input type="text" class="form-control" name="full_name" id="edit_full_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Username *</label>
+                        <input type="text" class="form-control" name="username" id="edit_username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-control" name="email" id="edit_email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Telefon *</label>
+                        <input type="text" class="form-control" name="phone" id="edit_phone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Yangi Parol (bo'sh qoldirsa o'zgartirilmaydi)</label>
+                        <input type="password" class="form-control" name="password" minlength="6">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Restoran</label>
+                        <select class="form-select" name="restaurant" id="edit_restaurant">
+                            <option value="">Biriktirilmagan</option>
+                            {% for rest in restaurants %}
+                            <option value="{{ rest.id }}">{{ rest.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" name="status" id="edit_status">
+                            <option value="active">Faol</option>
+                            <option value="pending">Kutilmoqda</option>
+                            <option value="blocked">Bloklangan</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <input type="checkbox" name="can_add_promotion" id="edit_can_add_promotion" value="1"> Aksiya qo'shish ruxsati
+                        </label>
+                        <small class="text-muted d-block">Bu admin menyuga aksiya qo'sha oladi</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Admin data for editing
+const adminData = {
+    {% for admin in admins %}
+    {{ admin.id }}: {
+        id: {{ admin.id }},
+        full_name: "{{ admin.full_name|escapejs }}",
+        username: "{{ admin.username|escapejs }}",
+        email: "{{ admin.email|escapejs }}",
+        phone: "{{ admin.phone|escapejs }}",
+        restaurant_id: {% if admin.restaurant %}{{ admin.restaurant.id }}{% else %}null{% endif %},
+        status: "{{ admin.status }}",
+        can_add_promotion: {% if admin.can_add_promotion %}true{% else %}false{% endif %}
+    },
+    {% endfor %}
+};
+
+function editAdmin(id) {
+    const admin = adminData[id];
+    if (!admin) return;
+    
+    document.getElementById('edit_admin_id').value = admin.id;
+    document.getElementById('edit_full_name').value = admin.full_name;
+    document.getElementById('edit_username').value = admin.username;
+    document.getElementById('edit_email').value = admin.email;
+    document.getElementById('edit_phone').value = admin.phone;
+    document.getElementById('edit_status').value = admin.status;
+    document.getElementById('edit_can_add_promotion').checked = admin.can_add_promotion;
+    
+    // Set restaurant
+    const restaurantSelect = document.getElementById('edit_restaurant');
+    if (admin.restaurant_id) {
+        restaurantSelect.value = admin.restaurant_id;
+    } else {
+        restaurantSelect.value = '';
+    }
+    
+    // Set form action
+    document.getElementById('editAdminForm').action = '/admin-panel/admins/update/' + id + '/';
+    
+    // Show modal
+    new bootstrap.Modal(document.getElementById('editAdminModal')).show();
+}
+
+async function deleteAdmin(id) {
+    if (confirm('Adminni o\'chirishni tasdiqlaysizmi?')) {
+        window.location.href = '/admin-panel/admins/delete/' + id + '/';
+    }
+}
+</script>
+{% endblock %}

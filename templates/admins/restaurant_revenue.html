@@ -1,0 +1,75 @@
+{% extends 'admins/restaurant_base.html' %}
+
+{% block title %}Tushumlar - {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h4><i class="fas fa-chart-line me-2"></i>Kunlik tushumlar</h4>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Sana</th>
+                <th>Tushum</th>
+                <th>Buyurtmalar</th>
+                <th>O'rtacha chek</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rev in revenues %}
+            <tr>
+                <td><strong>{{ rev.date|date:"d.m.Y" }}</strong></td>
+                <td><strong class="text-success">{{ rev.revenue|floatformat:0 }} so'm</strong></td>
+                <td><span class="badge bg-primary">{{ rev.orders_count }} ta</span></td>
+                <td>{{ rev.average_check|floatformat:0 }} so'm</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center py-5">
+                    <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
+                    <p class="text-muted">Tushumlar yo'q. Tushumni kunlik ravishda kiritib boring.</p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRevenueModal">
+                        <i class="fas fa-plus me-2"></i> Tushum qo'shish
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Add Revenue Modal -->
+<div class="modal fade" id="addRevenueModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Yangi tushum</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/restaurant-admin/{{ restaurant.id }}/revenue/">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Sana *</label>
+                        <input type="date" class="form-control" name="date" value="{{ today|date:'Y-m-d' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tushum (so'm) *</label>
+                        <input type="number" class="form-control" name="revenue" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Buyurtmalar soni *</label>
+                        <input type="number" class="form-control" name="orders_count" value="0" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor</button>
+                    <button type="submit" class="btn btn-success">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

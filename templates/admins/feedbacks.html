@@ -1,0 +1,81 @@
+{% extends 'admins/base.html' %}
+
+{% block title %}Fikr-mulohazalar - LocEats Admin{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4><i class="fas fa-comment-dots"></i> Fikr-mulohazalar</h4>
+</div>
+
+{% if unread_count > 0 %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle"></i> {{ unread_count }} ta o'qilmagan fikr-mulohaza mavjud
+</div>
+{% endif %}
+
+<div class="row">
+    {% for fb in feedbacks %}
+    <div class="col-md-6 mb-4">
+        <div class="card-modern">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h6 class="mb-1">
+                        <i class="fas fa-user me-2"></i>{{ fb.user_name|default:"Noma'lum foydalanuvchi" }}
+                    </h6>
+                    <small class="text-muted">
+                        <i class="fas fa-phone me-1"></i>{{ fb.user_phone|default:"Telefon yo'q" }}
+                    </small>
+                </div>
+                <div>
+                    {% if fb.is_replied %}
+                    <span class="badge bg-success"><i class="fas fa-check"></i> Javob berilgan</span>
+                    {% else %}
+                    <span class="badge bg-warning"><i class="fas fa-clock"></i> Kutilmoqda</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="p-3 bg-light rounded mb-3">
+                <p class="mb-0">{{ fb.message }}</p>
+                {% if fb.image %}
+                <div class="mt-2">
+                    <img src="{{ fb.image.url }}" style="max-width: 200px; border-radius: 8px; cursor: pointer;" 
+                         onclick="window.open('{{ fb.image.url }}')">
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="text-muted mb-3">
+                <small><i class="fas fa-clock me-1"></i>{{ fb.created_at|date:"Y-m-d H:i" }}</small>
+            </div>
+            
+            {% if fb.admin_reply %}
+            <div class="p-3 bg-primary text-white rounded mb-3">
+                <strong><i class="fas fa-reply me-2"></i>Admin javobi:</strong>
+                <p class="mb-0 mt-2">{{ fb.admin_reply }}</p>
+            </div>
+            {% else %}
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="feedback_id" value="{{ fb.id }}">
+                <div class="mb-3">
+                    <label class="form-label">Javob yozing</label>
+                    <textarea name="reply" class="form-control" rows="3" placeholder="Foydalanuvchiga javob..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane me-2"></i>Javob berish
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="fas fa-comment-slash text-muted" style="font-size: 60px;"></i>
+            <h5 class="text-muted mt-3">Hali fikr-mulohazalar yo'q</h5>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

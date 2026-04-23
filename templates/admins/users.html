@@ -1,0 +1,95 @@
+{% extends 'admins/base.html' %}
+
+{% block title %}Foydalanuvchilar - LocEats Admin{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4><i class="fas fa-users"></i> Ro'yxatdan o'tgan Foydalanuvchilar</h4>
+</div>
+
+<!-- Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card-stat">
+            <h6 class="text-muted">Jami Ro'yxatdan o'tgan</h6>
+            <h3>{{ stats.total_users }}</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card-stat">
+            <h6 class="text-muted">Buyurtma Bergan</h6>
+            <h3>{{ stats.users_with_orders_count }}</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card-stat">
+            <h6 class="text-muted">Faqat Ro'yxatdan</h6>
+            <h3>{{ stats.users_without_orders }}</h3>
+        </div>
+    </div>
+</div>
+
+<!-- Search -->
+<div class="card-modern mb-4">
+    <form method="GET" class="d-flex">
+        <input type="text" name="search" class="form-control me-2" placeholder="Qidirish..." value="{{ search }}">
+        <button type="submit" class="btn btn-primary">Qidirish</button>
+        {% if search %}
+        <a href="/admin-panel/users/" class="btn btn-secondary ms-2">Tozalash</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Users Table -->
+<div class="card-modern">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Ism</th>
+                    <th>Email</th>
+                    <th>Telefon</th>
+                    <th>Ro'yxatdan o'tgan</th>
+                    <th>Buyurtmalar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.phone }}</td>
+                    <td>{{ user.date_joined|date:"d.m.Y" }}</td>
+                    <td>
+                        <span class="badge bg-{% if user.order_count > 0 %}success{% else %}secondary{% endif %}">
+                        {{ user.order_count }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-4">Foydalanuvchilar yo'q</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<div class="d-flex justify-content-between mt-4">
+    <div>Sahifa {{ current_page }} / {{ total_pages }}</div>
+    <div>
+        {% if current_page > 1 %}
+        <a href="?page={{ current_page|add:-1 }}" class="btn btn-sm btn-secondary">Oldingi</a>
+        {% endif %}
+        {% if current_page < total_pages %}
+        <a href="?page={{ current_page|add:1 }}" class="btn btn-sm btn-secondary">Keyingi</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

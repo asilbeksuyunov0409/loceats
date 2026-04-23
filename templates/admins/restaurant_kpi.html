@@ -1,0 +1,148 @@
+{% extends 'admins/restaurant_base.html' %}
+
+{% block title %}KPI - {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h4><i class="fas fa-chart-line me-2"></i>KPI Hisobot</h4>
+</div>
+
+<!-- KPI Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="kpi-card">
+            <small>Oylik tushum</small>
+            <h2>{{ kpi.month_revenue|floatformat:0 }}</h2>
+            <small>so'm</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="kpi-card" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);">
+            <small>Oylik foyda</small>
+            <h2>{{ kpi.month_profit|floatformat:0 }}</h2>
+            <small>so'm</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="kpi-card" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">
+            <small>Foyda marjasi</small>
+            <h2>{{ kpi.month_profit_margin }}%</h2>
+            <div class="progress progress-modern mt-2">
+                <div class="progress-bar bg-white" style="width: {{ kpi.month_profit_margin }}%"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Detailed Stats -->
+    <div class="col-lg-6">
+        <div class="card-modern">
+            <div class="card-header">
+                <i class="fas fa-chart-bar me-2 text-primary"></i> Oylik statistika
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td>Oylik tushum</td>
+                        <td class="text-end"><strong class="text-success">{{ kpi.month_revenue|floatformat:0 }} so'm</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Oylik xarajatlar</td>
+                        <td class="text-end"><strong class="text-danger">{{ kpi.month_expenses|floatformat:0 }} so'm</strong></td>
+                    </tr>
+                    <tr class="border-top">
+                        <td><strong>Net foyda</strong></td>
+                        <td class="text-end"><strong class="text-primary">{{ kpi.month_profit|floatformat:0 }} so'm</strong></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Staff Stats -->
+    <div class="col-lg-6">
+        <div class="card-modern">
+            <div class="card-header">
+                <i class="fas fa-users me-2 text-info"></i> Xodimlar statistikasi
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td>Jami xodimlar</td>
+                        <td class="text-end"><strong>{{ kpi.total_staff }} ta</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Umumiy oyliklar</td>
+                        <td class="text-end"><strong class="text-warning">{{ kpi.total_salary|floatformat:0 }} so'm</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Oylik tushumdagi ulush</td>
+                        <td class="text-end">
+                            <strong class="text-info">{{ kpi.salary_percent }}%</strong>
+                            <div class="progress mt-1" style="height: 6px;">
+                                <div class="progress-bar bg-info" style="width: {{ kpi.salary_percent }}%"></div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <!-- Orders -->
+    <div class="col-md-6">
+        <div class="card-modern">
+            <div class="card-header">
+                <i class="fas fa-shopping-cart me-2 text-success"></i> Buyurtmalar
+            </div>
+            <div class="card-body text-center py-4">
+                <h1 class="display-4 text-success mb-0">{{ kpi.month_orders }}</h1>
+                <p class="text-muted">Oylik buyurtmalar</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Average Check -->
+    <div class="col-md-6">
+        <div class="card-modern">
+            <div class="card-header">
+                <i class="fas fa-receipt me-2 text-warning"></i> O'rtacha чек
+            </div>
+            <div class="card-body text-center py-4">
+                <h1 class="display-4 text-warning mb-0">{{ kpi.month_avg_check|floatformat:0 }}</h1>
+                <p class="text-muted">so'm</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Yearly Overview -->
+<div class="row g-4 mt-2">
+    <div class="col-12">
+        <div class="card-modern">
+            <div class="card-header">
+                <i class="fas fa-calendar-alt me-2 text-primary"></i> Yillik umumiy ko'rinish
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <h3 class="text-primary">{{ kpi.year_revenue|floatformat:0 }}</h3>
+                        <p class="text-muted mb-0">Yillik tushum (so'm)</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h3 class="text-success">{{ kpi.month_orders }}</h3>
+                        <p class="text-muted mb-0">Yillik buyurtmalar</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h3 class="text-warning">{{ kpi.salary_percent }}%</h3>
+                        <p class="text-muted mb-0">Xodimlar xarajati ulushi</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,275 @@
+{% extends 'admins/restaurant_base.html' %}
+
+{% block title %}Menyu - {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4><i class="fas fa-utensils me-2"></i>Menyu</h4>
+        <div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMenuModal">
+                <i class="fas fa-plus me-2"></i> Taom qo'shish
+            </button>
+            {% if can_add_promotion %}
+            <button class="btn btn-warning" onclick="showPromotionsTab()">
+                <i class="fas fa-percent me-2"></i> aksiyalar
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+<!-- Tab navigation -->
+<ul class="nav nav-tabs mb-4" id="menuTabs">
+    <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="tab" href="#allItems">Barchasi</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#foodItems">Ovqatlar</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#drinkItems">Ichimliklar</a>
+    </li>
+    {% if can_add_promotion %}
+    <li class="nav-item">
+        <a class="nav-link text-danger" data-bs-toggle="tab" href="#promotionItems">
+            <i class="fas fa-fire"></i> Aksiyalar
+        </a>
+    </li>
+    {% endif %}
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="allItems">
+        {% include 'admins/partials/menu_items_table.html' with items=menu_items %}
+    </div>
+    <div class="tab-pane fade" id="foodItems">
+        {% include 'admins/partials/menu_items_table.html' with items=menu_items|dictsort:"item_type" %}
+    </div>
+    <div class="tab-pane fade" id="drinkItems">
+        {% include 'admins/partials/menu_items_table.html' with items=menu_items %}
+    </div>
+    {% if can_add_promotion %}
+    <div class="tab-pane fade" id="promotionItems">
+        {% include 'admins/partials/promotion_items_table.html' with items=menu_items %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Edit Menu Modal -->
+<div class="modal fade" id="editMenuModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Taomni tahrirlash</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/restaurant-admin/{{ restaurant.id }}/menu/" enctype="multipart/form-data" id="editMenuForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="item_id" id="edit_item_id">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Rasm</label>
+                            <input type="file" class="form-control" name="image" accept="image/*">
+                            <small class="text-muted">Yangi rasm yuklash uchun tanlang</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nomi *</label>
+                            <input type="text" class="form-control" name="name" id="edit_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Narxi (so'm) *</label>
+                            <input type="number" class="form-control" name="price" id="edit_price" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Tavsif</label>
+                            <textarea class="form-control" name="description" id="edit_description" rows="2"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Turi</label>
+                            <select class="form-select" name="item_type" id="edit_item_type">
+                                <option value="food">Ovqat</option>
+                                <option value="drink">Ichimlik</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Kategoriya</label>
+                            <select class="form-select" name="category" id="edit_category">
+                                <option value="">Tanlang...</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_available" id="edit_is_available" checked>
+                                <label class="form-check-label" for="edit_is_available">
+                                    Mavjud
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor</button>
+                    <button type="submit" class="btn btn-warning">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Menu Modal -->
+<div class="modal fade" id="addMenuModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Yangi taom</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/restaurant-admin/{{ restaurant.id }}/menu/" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Rasm</label>
+                            <input type="file" class="form-control" name="image" accept="image/*">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nomi *</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Narxi (so'm) *</label>
+                            <input type="number" class="form-control" name="price" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Tavsif</label>
+                            <textarea class="form-control" name="description" rows="2"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Turi</label>
+                            <select class="form-select" name="item_type">
+                                <option value="food">Ovqat</option>
+                                <option value="drink">Ichimlik</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Kategoriya</label>
+                            <select class="form-select" name="category">
+                                <option value="">Tanlang...</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Menu items data for promotions
+const menuItems = {
+    {% for item in menu_items %}
+    {{ item.id }}: {
+        id: {{ item.id }},
+        name: "{{ item.name|escapejs }}",
+        price: {{ item.price|default:0 }},
+        is_promotion: {% if item.is_promotion %}true{% else %}false{% endif %},
+        promotion_price: {{ item.promotion_price|default:"null" }},
+        discount_percent: {{ item.discount_percent|default:0 }},
+        promotion_title: "{{ item.promotion_title|default:""|escapejs }}"
+    },
+    {% endfor %}
+};
+
+function editMenuItem(id, name, price, description, itemType, categoryId, isAvailable) {
+    document.getElementById('edit_item_id').value = id;
+    document.getElementById('edit_name').value = name;
+    document.getElementById('edit_price').value = price;
+    document.getElementById('edit_description').value = description;
+    document.getElementById('edit_item_type').value = itemType;
+    document.getElementById('edit_category').value = categoryId;
+    document.getElementById('edit_is_available').checked = isAvailable;
+
+    var editModal = new bootstrap.Modal(document.getElementById('editMenuModal'));
+    editModal.show();
+}
+
+function togglePromotion(itemId) {
+    const item = menuItems[itemId];
+    if (!item) return;
+    
+    if (item.is_promotion) {
+        // Remove promotion
+        if (confirm('Aksiyani bekor qilishni tasdiqlaysizmi?')) {
+            fetch('/restaurant-admin/{{ restaurant.id }}/menu/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: 'action=promotion&item_id=' + itemId + '&promo_enabled=0'
+            }).then(() => location.reload());
+        }
+    } else {
+        // Add promotion
+        document.getElementById('promo_item_id').value = itemId;
+        document.getElementById('promo_item_name').innerHTML = '<strong>' + item.name + '</strong>';
+        document.getElementById('promo_title').value = '';
+        document.getElementById('promo_discount').value = '10';
+        document.getElementById('promo_price').value = Math.round(item.price * 0.9);
+        document.getElementById('promo_enabled').value = '1';
+        
+        var promoModal = new bootstrap.Modal(document.getElementById('promotionModal'));
+        promoModal.show();
+    }
+}
+
+// Auto-calculate promo price when discount changes
+document.getElementById('promo_discount').addEventListener('input', function() {
+    const itemId = document.getElementById('promo_item_id').value;
+    const item = menuItems[itemId];
+    if (item) {
+        const discount = parseInt(this.value) || 0;
+        const newPrice = Math.round(item.price * (100 - discount) / 100);
+        document.getElementById('promo_price').value = newPrice;
+    }
+});
+
+function showPromotionsTab() {
+    const trigger = document.querySelector('a[href="#promotionItems"]');
+    if (trigger) {
+        trigger.click();
+    }
+}
+
+function toggleAvailability(itemId, currentStatus) {
+    fetch(`/restaurant-admin/{{ restaurant.id }}/menu/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: `action=toggle_availability&item_id=${itemId}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+</script>
+{% endblock %}

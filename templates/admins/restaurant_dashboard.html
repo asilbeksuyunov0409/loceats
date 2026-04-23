@@ -1,0 +1,156 @@
+{% extends 'admins/restaurant_base.html' %}
+
+{% block title %}{{ restaurant.name }} - Dashboard{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h4><i class="fas fa-chart-pie me-2"></i>Dashboard</h4>
+</div>
+
+<!-- Today's Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h6 class="text-muted mb-1">Bugungi tushum</h6>
+                    <h3 class="mb-0 text-success">{{ stats.today_revenue|floatformat:0 }}</h3>
+                    <small>so'm</small>
+                </div>
+                <div class="icon bg-success bg-opacity-10 text-success">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+            </div>
+            <div class="text-muted small">
+                <i class="fas fa-receipt me-1"></i> {{ stats.today_orders }} ta buyurtma
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h6 class="text-muted mb-1">Oylik tushum</h6>
+                    <h3 class="mb-0 text-primary">{{ stats.month_revenue|floatformat:0 }}</h3>
+                    <small>so'm</small>
+                </div>
+                <div class="icon bg-primary bg-opacity-10 text-primary">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+            </div>
+            <div class="text-muted small">
+                <i class="fas fa-wallet me-1"></i> Xarajat: {{ stats.month_expenses|floatformat:0 }} so'm
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h6 class="text-muted mb-1">Sof foyda</h6>
+                    <h3 class="mb-0 text-warning">{{ stats.net_profit|floatformat:0 }}</h3>
+                    <small>so'm</small>
+                </div>
+                <div class="icon bg-warning bg-opacity-10 text-warning">
+                    <i class="fas fa-piggy-bank"></i>
+                </div>
+            </div>
+            <div class="progress progress-modern">
+                <div class="progress-bar bg-warning" style="width: 75%"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h6 class="text-muted mb-1">Reyting</h6>
+                    <h3 class="mb-0">
+                        <span class="text-warning">{{ stats.avg_rating|floatformat:1 }}</span>
+                    </h3>
+                    <small>⭐ o'rtacha</small>
+                </div>
+                <div class="icon bg-warning bg-opacity-10 text-warning">
+                    <i class="fas fa-star"></i>
+                </div>
+            </div>
+            <div class="text-muted small">
+                <i class="fas fa-comments me-1"></i> Sharhlar
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tables & Bookings -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card text-center">
+            <div class="icon bg-success bg-opacity-10 text-success mx-auto mb-3" style="width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px;">
+                <i class="fas fa-chair"></i>
+            </div>
+            <h3 class="mb-1">{{ stats.available_tables }}</h3>
+            <p class="text-muted mb-0">Bo'sh stol</p>
+            <small class="text-muted">{{ stats.total_tables }} ta jami</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card text-center">
+            <div class="icon bg-danger bg-opacity-10 text-danger mx-auto mb-3" style="width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px;">
+                <i class="fas fa-users"></i>
+            </div>
+            <h3 class="mb-1">{{ stats.occupied_tables }}</h3>
+            <p class="text-muted mb-0">Band stol</p>
+            <small class="text-muted">Bugungi bronlar: {{ stats.today_bookings }}</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card text-center">
+            <div class="icon bg-primary bg-opacity-10 text-primary mx-auto mb-3" style="width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px;">
+                <i class="fas fa-utensils"></i>
+            </div>
+            <h3 class="mb-1">{{ stats.menu_items }}</h3>
+            <p class="text-muted mb-0">Menyu elementi</p>
+            <small class="text-muted">{{ stats.staff_count }} ta xodim</small>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-4">
+    <div class="col-md-12">
+        <div class="card-modern">
+            <div class="card-header">
+                <i class="fas fa-bolt me-2 text-warning"></i> Tezkor amallar
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="/restaurant-admin/{{ restaurant.id }}/tables/" class="btn btn-outline-primary w-100 py-3">
+                            <i class="fas fa-chair fa-2x mb-2 d-block"></i>
+                            Stollar va QR kodlar
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="/restaurant-admin/{{ restaurant.id }}/menu/" class="btn btn-outline-success w-100 py-3">
+                            <i class="fas fa-plus-circle fa-2x mb-2 d-block"></i>
+                            Taom qo'shish
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="/restaurant-admin/{{ restaurant.id }}/expenses/" class="btn btn-outline-warning w-100 py-3">
+                            <i class="fas fa-wallet fa-2x mb-2 d-block"></i>
+                            Xarajat qo'shish
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="/restaurant-admin/{{ restaurant.id }}/kpi/" class="btn btn-outline-danger w-100 py-3">
+                            <i class="fas fa-chart-line fa-2x mb-2 d-block"></i>
+                            KPI hisobot
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> Bu bo'limda taomlarga aksiya qo'shishingiz mumkin. Har bir taomga chegirma belgilang.
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Rasm</th>
+                <th>Nomi</th>
+                <th>Joriy narx</th>
+                <th>Aksiya narxi</th>
+                <th>Chegirma %</th>
+                <th>Aksiya sarlavhasi</th>
+                <th>Amallar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr class="{% if item.is_promotion %}table-danger{% endif %}">
+                <td>
+                    {% if item.image %}
+                    <img src="{{ item.image.url }}" alt="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
+                    {% else %}
+                    <div class="bg-light rounded" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-utensils text-muted"></i>
+                    </div>
+                    {% endif %}
+                </td>
+                <td>
+                    <strong>{{ item.name }}</strong>
+                    {% if item.is_promotion %}
+                    <br><span class="badge bg-danger">Aksiyada</span>
+                    {% endif %}
+                </td>
+                <td><strong class="text-success">{{ item.price|floatformat:0 }} so'm</strong></td>
+                <td>
+                    {% if item.is_promotion %}
+                    <span class="text-decoration-line-through text-muted">{{ item.price|floatformat:0 }}</span>
+                    <br><strong class="text-danger">{{ item.promotion_price|floatformat:0 }} so'm</strong>
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if item.is_promotion %}
+                    <span class="badge bg-success">{{ item.discount_percent|default:0 }}%</span>
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if item.is_promotion %}
+                    {{ item.promotion_title|default:"Aksiya" }}
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <button class="btn btn-sm {% if item.is_promotion %}btn-warning{% else %}btn-success{% endif %}" onclick="togglePromotion({{ item.id }})">
+                        {% if item.is_promotion %}
+                        <i class="fas fa-times"></i> Bekor qilish
+                        {% else %}
+                        <i class="fas fa-plus"></i> Aksiya qo'shish
+                        {% endif %}
+                    </button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center py-5">
+                    <i class="fas fa-percent fa-4x text-muted mb-3"></i>
+                    <p class="text-muted">Menyu bo'sh</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Promotion Modal -->
+<div class="modal fade" id="promotionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-percent me-2"></i>Aksiya qo'shish</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/restaurant-admin/{{ restaurant.id }}/menu/" id="promotionForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="promotion">
+                <input type="hidden" name="item_id" id="promo_item_id">
+                <input type="hidden" name="promo_enabled" id="promo_enabled" value="1">
+                <div class="modal-body">
+                    <p id="promo_item_name"></p>
+                    <div class="mb-3">
+                        <label class="form-label">Aksiya sarlavhasi</label>
+                        <input type="text" class="form-control" name="promotion_title" id="promo_title" placeholder="Masalan: Yangi yil aksiyasi!">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Chegirma foizi (%)</label>
+                        <input type="number" class="form-control" name="discount_percent" id="promo_discount" min="1" max="99" value="10" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Aksiya narxi (so'm)</label>
+                        <input type="number" class="form-control" name="promotion_price" id="promo_price" required>
+                        <small class="text-muted">Joriy narxdan past bo'lishi kerak</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor</button>
+                    <button type="submit" class="btn btn-danger">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

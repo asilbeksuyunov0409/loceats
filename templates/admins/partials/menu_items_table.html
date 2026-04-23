@@ -1,0 +1,207 @@
+<div class="row g-3">
+    {% for item in items %}
+    <div class="col-6 col-md-4 col-lg-3">
+        <div class="menu-item-card {% if not item.is_available %}unavailable{% endif %}">
+            <div class="menu-item-image">
+                {% if item.image %}
+                <img src="{{ item.image.url }}" alt="{{ item.name }}">
+                {% else %}
+                <div class="no-image">
+                    <i class="fas fa-utensils"></i>
+                </div>
+                {% endif %}
+                
+                {% if item.is_promotion and item.discount_percent %}
+                <div class="promo-tag">-{{ item.discount_percent }}%</div>
+                {% endif %}
+                
+                <div class="menu-item-status">
+                    <span class="status-badge {% if item.is_available %}active{% else %}inactive{% endif %}">
+                        {% if item.is_available %}Mavjud{% else %}Yo'q{% endif %}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="menu-item-content">
+                <h6 class="menu-item-name">{{ item.name }}</h6>
+                <p class="menu-item-desc">{{ item.description|truncatechars:25 }}</p>
+                
+                <div class="menu-item-price">
+                    {% if item.is_promotion and item.promotion_price %}
+                    <span class="old-price">{{ item.price|floatformat:0 }}</span>
+                    <span class="new-price">{{ item.promotion_price|floatformat:0 }} so'm</span>
+                    {% else %}
+                    <span class="new-price">{{ item.price|floatformat:0 }} so'm</span>
+                    {% endif %}
+                </div>
+                
+                <div class="menu-item-actions">
+                    <button class="btn btn-sm btn-edit" onclick="editMenuItem({{ item.id }}, '{{ item.name|escapejs }}', {{ item.price }}, '{{ item.description|escapejs }}', '{{ item.item_type }}', '{{ item.category.id|default:'' }}', {{ item.is_available|lower }})">
+                        <i class="fas fa-pen"></i>
+                    </button>
+                    <button class="btn btn-sm btn-toggle" onclick="toggleAvailability({{ item.id }}, {{ item.is_available|lower }})">
+                        <i class="fas fa-{% if item.is_available %}eye-slash{% else %}eye{% endif %}"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="empty-state">
+            <i class="fas fa-utensils fa-3x"></i>
+            <h5>Menyu bo'sh</h5>
+            <p>Taom qo'shish uchun tugmani bosing</p>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMenuModal">
+                <i class="fas fa-plus me-2"></i>Taom qo'shish
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+.menu-item-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: all 0.2s ease;
+}
+.menu-item-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+.menu-item-card.unavailable {
+    opacity: 0.6;
+}
+
+.menu-item-image {
+    position: relative;
+    height: 100px;
+    overflow: hidden;
+    background: #f8f9fa;
+}
+.menu-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.menu-item-image .no-image {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #adb5bd;
+    font-size: 28px;
+}
+
+.promo-tag {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.menu-item-status {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+}
+.status-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+.status-badge.active {
+    background: #d4edda;
+    color: #155724;
+}
+.status-badge.inactive {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.menu-item-content {
+    padding: 10px;
+}
+.menu-item-name {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #2c3e50;
+    line-height: 1.3;
+}
+.menu-item-desc {
+    font-size: 10px;
+    color: #6c757d;
+    margin-bottom: 8px;
+    line-height: 1.3;
+}
+
+.menu-item-price {
+    margin-bottom: 8px;
+}
+.menu-item-price .old-price {
+    font-size: 10px;
+    color: #adb5bd;
+    text-decoration: line-through;
+    margin-right: 4px;
+}
+.menu-item-price .new-price {
+    font-size: 14px;
+    font-weight: 700;
+    color: #27ae60;
+}
+
+.menu-item-actions {
+    display: flex;
+    gap: 6px;
+}
+.menu-item-actions .btn {
+    flex: 1;
+    padding: 4px;
+    font-size: 12px;
+    border-radius: 6px;
+}
+.btn-edit {
+    background: #e3f2fd;
+    color: #1976d2;
+    border: none;
+}
+.btn-edit:hover {
+    background: #bbdefb;
+}
+.btn-toggle {
+    background: #fff3e0;
+    color: #f57c00;
+    border: none;
+}
+.btn-toggle:hover {
+    background: #ffe0b2;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: #6c757d;
+}
+.empty-state i {
+    color: #dee2e6;
+    margin-bottom: 15px;
+}
+.empty-state h5 {
+    color: #495057;
+    margin-bottom: 5px;
+}
+.empty-state p {
+    margin-bottom: 20px;
+}
+</style>

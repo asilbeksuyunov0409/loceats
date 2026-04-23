@@ -1,0 +1,97 @@
+{% extends 'admins/base.html' %}
+
+{% block title %}Xarajatlar - LocEats Admin{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h4><i class="fas fa-wallet me-2"></i>Barcha Xarajatlar</h4>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+        <i class="fas fa-plus me-2"></i> Xarajat qo'shish
+    </button>
+</div>
+
+<div class="table-modern">
+    <table class="table table-hover mb-0">
+        <thead>
+            <tr>
+                <th>Sana</th>
+                <th>Restoran</th>
+                <th>Kategoriya</th>
+                <th>Izoh</th>
+                <th>Summa</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for expense in expenses %}
+            <tr>
+                <td><strong>{{ expense.date|date:"d.m.Y" }}</strong></td>
+                <td>{{ expense.restaurant.name }}</td>
+                <td>
+                    <span class="badge bg-secondary">{{ expense.category.name|default:"-" }}</span>
+                </td>
+                <td>{{ expense.description|truncatechars:30 }}</td>
+                <td><strong class="text-danger">{{ expense.amount|floatformat:0 }} so'm</strong></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center py-5">
+                    <i class="fas fa-wallet fa-4x text-muted mb-3"></i>
+                    <p class="text-muted">Xarajatlar yo'q</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Add Expense Modal -->
+<div class="modal fade" id="addExpenseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-minus-circle me-2"></i>Yangi xarajat</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/admin-panel/expenses/">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Restoran *</label>
+                        <select class="form-select" name="restaurant" required>
+                            <option value="">Tanlang...</option>
+                            {% for rest in restaurants %}
+                            <option value="{{ rest.id }}">{{ rest.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Kategoriya *</label>
+                        <select class="form-select" name="category" required>
+                            <option value="">Tanlang...</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Summa (so'm) *</label>
+                        <input type="number" class="form-control" name="amount" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sana *</label>
+                        <input type="date" class="form-control" name="date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Izoh</label>
+                        <textarea class="form-control" name="description" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor</button>
+                    <button type="submit" class="btn btn-danger">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

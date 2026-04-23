@@ -1,0 +1,185 @@
+{% extends 'admins/restaurant_base.html' %}
+
+{% block title %}{{ restaurant.name }} - Ombor{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h4><i class="fas fa-warehouse me-2"></i>Ombor</h4>
+</div>
+
+<!-- Add Item Form -->
+<div class="card-modern mb-4">
+    <div class="card-header">
+        <i class="fas fa-plus-circle me-2"></i> Yangi mahsulot qo'shish
+    </div>
+    <div class="card-body">
+        <form method="POST" class="row g-3">
+            {% csrf_token %}
+            <input type="hidden" name="add_item" value="1">
+            <div class="col-md-2">
+                <input type="text" name="name" class="form-control" placeholder="Nomi" required>
+            </div>
+            <div class="col-md-2">
+                <select name="category" class="form-select">
+                    <option value="food">Oziq-ovqat</option>
+                    <option value="drink">Ichimliklar</option>
+                    <option value="packaging">Qadoqlash</option>
+                    <option value="cleaning">Tozalash</option>
+                    <option value="other">Boshqa</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <input type="text" name="unit" class="form-control" placeholder="Birlik" required>
+            </div>
+            <div class="col-md-1">
+                <input type="number" name="quantity" class="form-control" placeholder="Miqdor">
+            </div>
+            <div class="col-md-1">
+                <input type="number" name="min_quantity" class="form-control" placeholder="Min">
+            </div>
+            <div class="col-md-2">
+                <input type="number" name="price" class="form-control" placeholder="Narxi">
+            </div>
+            <div class="col-md-2">
+                <input type="text" name="supplier" class="form-control" placeholder="Yetkazuvchi">
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if low_stock_items %}
+<div class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <strong>{{ low_stock_items.count }}</strong> ta mahsulot kam qoldi!
+</div>
+{% endif %}
+
+<!-- Inventory List -->
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="card-modern">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-boxes me-2"></i> Ombor mahsulotlari</span>
+                <span class="badge bg-primary badge-modern">{{ items.count }} ta</span>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-modern mb-0">
+                    <thead>
+                        <tr>
+                            <th>Nomi</th>
+                            <th>Kategoriya</th>
+                            <th>Miqdor</th>
+                            <th>Narxi</th>
+                            <th>Yetkazuvchi</th>
+                            <th>Holati</th>
+                            <th>Amallar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr class="{% if item.quantity <= item.min_quantity %}table-warning{% endif %}">
+                            <td><strong>{{ item.name }}</strong></td>
+                            <td>
+                                {% if item.category == 'food' %}<span class="badge bg-success">Oziq-ovqat</span>
+                                {% elif item.category == 'drink' %}<span class="badge bg-info">Ichimlik</span>
+                                {% elif item.category == 'packaging' %}<span class="badge bg-warning">Qadoq</span>
+                                {% elif item.category == 'cleaning' %}<span class="badge bg-secondary">Tozalash</span>
+                                {% else %}<span class="badge bg-primary">Boshqa</span>{% endif %}
+                            </td>
+                            <td>{{ item.quantity }} {{ item.unit }}</td>
+                            <td>{{ item.price|floatformat:0 }} so'm</td>
+                            <td>{{ item.supplier|default:"-" }}</td>
+                            <td>
+                                {% if item.quantity <= item.min_quantity %}
+                                    <span class="badge bg-warning">Kam</span>
+                                {% else %}
+                                    <span class="badge bg-success">Mavjud</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#entryModal{{ item.id }}">
+                                    <i class="fas fa-plus-minus"></i>
+                                </button>
+                                
+                                <div class="modal fade" id="entryModal{{ item.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">{{ item.name }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form method="POST">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="add_entry" value="1">
+                                                <input type="hidden" name="item_id" value="{{ item.id }}">
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Turi</label>
+                                                        <select name="entry_type" class="form-select">
+                                                            <option value="in">Kirim</option>
+                                                            <option value="out">Chiqim</option>
+                                                            <option value="adjust">Korreksiya</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Miqdor</label>
+                                                        <input type="number" name="entry_quantity" class="form-control" step="0.01" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Narxi (ixtiyoriy)</label>
+                                                        <input type="number" name="entry_price" class="form-control">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor</button>
+                                                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="fas fa-box-open fa-2x mb-2 d-block text-muted"></i>
+                                Ombor bo'sh
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="stat-card">
+            <h6 class="text-muted mb-3">Umumiy qiymat</h6>
+            <div class="text-center">
+                {% with total_val=items|length %}
+                <h2 class="text-primary">{{ items.count }}</h2>
+                {% endwith %}
+                <p class="text-muted mb-0">Turli mahsulotlar</p>
+            </div>
+        </div>
+        {% if low_stock_items %}
+        <div class="stat-card mt-3 border-warning">
+            <h6 class="text-warning mb-3"><i class="fas fa-exclamation-triangle me-2"></i>Kam qolganlar</h6>
+            {% for item in low_stock_items %}
+            <div class="d-flex justify-content-between py-2 border-bottom">
+                <span>{{ item.name }}</span>
+                <span class="badge bg-warning">{{ item.quantity }} {{ item.unit }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

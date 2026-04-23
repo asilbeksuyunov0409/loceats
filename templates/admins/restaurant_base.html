@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ restaurant.name }} - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --primary: #e74c3c;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #c0392b;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+        }
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .top-navbar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--danger) 100%);
+            padding: 15px 30px;
+            color: white;
+        }
+        .sidebar {
+            background: white;
+            width: 250px;
+            min-height: calc(100vh - 70px);
+            padding: 20px 0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+        .sidebar .nav-item {
+            padding: 12px 25px;
+            color: var(--dark);
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            border-left: 4px solid transparent;
+        }
+        .sidebar .nav-item:hover, .sidebar .nav-item.active {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+        .sidebar .nav-item i {
+            width: 25px;
+            color: var(--primary);
+        }
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            transition: transform 0.3s;
+            border: none;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-card .icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .card-modern {
+            background: white;
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        .card-modern .card-header {
+            background: white;
+            border: none;
+            padding: 20px 25px;
+            font-weight: 600;
+        }
+        .btn-primary {
+            background: var(--primary);
+            border: none;
+            padding: 10px 25px;
+            border-radius: 10px;
+        }
+        .btn-primary:hover {
+            background: var(--danger);
+            transform: translateY(-2px);
+        }
+        .table > :not(caption) > * > * {
+            padding: 15px;
+        }
+        .badge-modern {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        .kpi-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--danger) 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+        }
+        .kpi-card h2 {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        .progress-modern {
+            height: 10px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.3);
+        }
+        .progress-modern .progress-bar {
+            border-radius: 10px;
+        }
+        .main-content {
+            flex: 1;
+            padding: 25px;
+            overflow-x: hidden;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="top-navbar d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-utensils fa-2x me-3"></i>
+            <div>
+                <h4 class="mb-0">{{ restaurant.name }}</h4>
+                <small>Restoran Admin Panel</small>
+            </div>
+        </div>
+        <div class="d-flex align-items-center">
+            <a href="/admin-login/" class="btn btn-light btn-sm">
+                <i class="fas fa-sign-out-alt me-2"></i>Chiqish
+            </a>
+        </div>
+    </nav>
+
+    <div class="d-flex">
+        <div class="sidebar">
+            <nav>
+                <a href="/restaurant-admin/{{ restaurant.id }}/" class="nav-item {% if page == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-chart-pie"></i> Boshqaruv paneli
+                </a>
+                <a href="/restaurant-admin/{{ restaurant.id }}/orders/" class="nav-item {% if page == 'orders' %}active{% endif %}">
+                    <i class="fas fa-shopping-bag"></i> Buyurtmalar
+                </a>
+                <a href="/restaurant-admin/{{ restaurant.id }}/bookings/" class="nav-item {% if page == 'bookings' %}active{% endif %}">
+                    <i class="fas fa-calendar-check"></i> Bronlar
+                </a>
+                <a href="/restaurant-admin/{{ restaurant.id }}/tables/" class="nav-item {% if page == 'tables' %}active{% endif %}">
+                    <i class="fas fa-chair"></i> Stollar & QR
+                </a>
+                <a href="/restaurant-admin/{{ restaurant.id }}/menu/" class="nav-item {% if page == 'menu' %}active{% endif %}">
+                    <i class="fas fa-book-open"></i> Menyu
+                </a>
+                <a href="/restaurant-admin/{{ restaurant.id }}/reviews/" class="nav-item {% if page == 'reviews' %}active{% endif %}">
+                    <i class="fas fa-star"></i> Sharhlar
+                </a>
+                <hr class="my-2">
+                <a href="/restaurant-admin/{{ restaurant.id }}/staff/" class="nav-item {% if page == 'staff' %}active{% endif %}">
+                    <i class="fas fa-user-tie"></i> Xodimlar
+                </a>
+                <a href="/restaurant-admin/{{ restaurant.id }}/attendance/" class="nav-item {% if page == 'attendance' %}active{% endif %}">
+                    <i class="fas fa-clock"></i> Davomat
+                </a>
+                <a href="/restaurant-admin/{{ restaurant.id }}/warehouse/" class="nav-item {% if page == 'warehouse' %}active{% endif %}">
+                    <i class="fas fa-warehouse"></i> Ombor
+                </a>
+                <hr class="my-2">
+                <a href="/restaurant-admin/{{ restaurant.id }}/revenue/" class="nav-item {% if page == 'revenue' %}active{% endif %}">
+                    <i class="fas fa-chart-line"></i> Tushumlar
+                </a>
+                <a href="/restaurant-admin/{{ restaurant.id }}/expenses/" class="nav-item {% if page == 'expenses' %}active{% endif %}">
+                    <i class="fas fa-wallet"></i> Xarajatlar
+                </a>
+                <a href="/restaurant-admin/{{ restaurant.id }}/kpi/" class="nav-item {% if page == 'kpi' %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt"></i> KPI & Hisobot
+                </a>
+                <a href="/restaurant-admin/{{ restaurant.id }}/chat/" class="nav-item {% if page == 'chat' %}active{% endif %}">
+                    <i class="fas fa-comments"></i> Chat
+                </a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
