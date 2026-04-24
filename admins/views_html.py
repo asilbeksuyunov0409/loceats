@@ -1265,10 +1265,13 @@ def _check_restaurant_admin_auth(request, restaurant_id):
 
 # Restaurant Admin Views
 def restaurant_admin_dashboard(request, restaurant_id):
+    if not _check_restaurant_admin_auth(request, restaurant_id):
+        return redirect('/restaurant-admin-login/')
+    
     try:
         restaurant = Restaurant.objects.get(id=restaurant_id)
     except Restaurant.DoesNotExist:
-        return redirect('/admin-login/')
+        return redirect('/restaurant-admin-login/')
     
     today = timezone.now().date()
     month_start = today.replace(day=1)
@@ -1512,7 +1515,42 @@ def cancel_booking(request, restaurant_id, booking_id):
     return redirect(f'/restaurant-admin/{restaurant_id}/bookings/')
 
 
+def accept_invitation(request, restaurant_id, invitation_id):
+    if not _check_restaurant_admin_auth(request, restaurant_id):
+        return redirect('/restaurant-admin-login/')
+    
+    try:
+        invitation = EventInvitation.objects.get(id=invitation_id, event__restaurant_id=restaurant_id)
+        invitation.status = 'accepted'
+        invitation.save()
+    except Exception as e:
+        print(f"Invitation accept xato: {e}")
+    
+    return redirect(f'/restaurant-admin/{restaurant_id}/bookings/')
+
+
+def decline_invitation(request, restaurant_id, invitation_id):
+    if not _check_restaurant_admin_auth(request, restaurant_id):
+        return redirect('/restaurant-admin-login/')
+    
+    try:
+        invitation = EventInvitation.objects.get(id=invitation_id, event__restaurant_id=restaurant_id)
+        invitation.status = 'declined'
+        invitation.save()
+    except Exception as e:
+        print(f"Invitation decline xato: {e}")
+    
+    return redirect(f'/restaurant-admin/{restaurant_id}/bookings/')
+
+
 def restaurant_bookings_view(request, restaurant_id):
+    if not _check_restaurant_admin_auth(request, restaurant_id):
+        return redirect('/restaurant-admin-login/')
+    
+    try:
+        restaurant = Restaurant.objects.get(id=restaurant_id)
+    except Restaurant.DoesNotExist:
+        return redirect('/restaurant-admin-login/')
     
     today = timezone.now().date()
     
@@ -1533,6 +1571,12 @@ def restaurant_bookings_view(request, restaurant_id):
         booking_date_time__isnull=False
     ).order_by('-booking_date_time')[:50]
     
+    # Event invitations - taklifnomalar
+    today_invitations = EventInvitation.objects.filter(
+        event__restaurant=restaurant,
+        status='pending'
+    ).select_related('event')
+    
     # Bugungi bronlar va buyurtmalarni birlashtirish
     all_bookings = []
     
@@ -1550,6 +1594,23 @@ def restaurant_bookings_view(request, restaurant_id):
             'is_event': b.event is not None,
             'event_title': b.event.title if b.event else None,
             'note': b.note or '',
+        }
+        all_bookings.append(booking_data)
+    
+    # Invitations (taklifnomalar) ni qo'shish
+    for inv in today_invitations:
+        booking_data = {
+            'type': 'invitation',
+            'id': inv.id,
+            'user_name': inv.guest_name,
+            'phone': inv.guest_phone,
+            'guest_count': 1,
+            'date_time': inv.event.event_date.strftime('%Y-%m-%d') if inv.event else '-',
+            'table': '-',
+            'status': inv.status,
+            'is_event': True,
+            'event_title': inv.event.title if inv.event else 'Tadbir',
+            'note': 'Taklifnoma',
         }
         all_bookings.append(booking_data)
     
@@ -1573,6 +1634,7 @@ def restaurant_bookings_view(request, restaurant_id):
         'today_bookings': today_bookings,
         'upcoming_bookings': upcoming_bookings,
         'all_bookings': all_bookings,
+        'invitations': today_invitations,
     }
     return render(request, 'admins/restaurant_bookings.html', context)
 

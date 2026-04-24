@@ -39,6 +39,8 @@
                     <td>
                         {% if item.type == 'booking' %}
                         <span class="badge bg-info">#B{{ item.id }}</span>
+                        {% elif item.type == 'invitation' %}
+                        <span class="badge bg-purple">#I{{ item.id }}</span>
                         {% else %}
                         <span class="badge bg-warning">#O{{ item.id }}</span>
                         {% endif %}
@@ -64,6 +66,18 @@
                             <span class="badge bg-warning text-dark">Kutilmoqda</span>
                             {% elif item.status == 'confirmed' %}
                             <span class="badge bg-success">Tasdiqlangan</span>
+                            {% else %}
+                            <span class="badge bg-primary">{{ item.status }}</span>
+                            {% endif %}
+                        {% elif item.type == 'invitation' %}
+                            {% if item.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">Kutilmoqda</span>
+                            {% elif item.status == 'accepted' %}
+                            <span class="badge bg-success">Qabul qilgan</span>
+                            {% elif item.status == 'declined' %}
+                            <span class="badge bg-danger">Rad etdi</span>
+                            {% elif item.status == 'arrived' %}
+                            <span class="badge bg-info">Keldi</span>
                             {% else %}
                             <span class="badge bg-primary">{{ item.status }}</span>
                             {% endif %}
@@ -101,6 +115,21 @@
                                 </button>
                             </form>
                         </div>
+                        {% elif item.type == 'invitation' and item.status == 'pending' %}
+                        <div class="btn-group btn-group-sm">
+                            <form method="post" action="/restaurant-admin/{{ restaurant.id }}/invitations/{{ item.id }}/accept/" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm" title="Qabul qilish">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
+                            <form method="post" action="/restaurant-admin/{{ restaurant.id }}/invitations/{{ item.id }}/decline/" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm" title="Rad etish">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </form>
+                        </div>
                         {% else %}
                         -
                         {% endif %}
@@ -108,7 +137,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="8" class="text-center text-muted py-4">
+                    <td colspan="9" class="text-center text-muted py-4">
                         <i class="fas fa-inbox fa-2x mb-2 d-block text-muted"></i>
                         Buyurtmalar yo'q
                     </td>

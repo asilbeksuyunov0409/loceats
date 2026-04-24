@@ -83,10 +83,13 @@
                     {% if order.phone %}<br><small>{{ order.phone }}</small>{% endif %}
                 </td>
                 <td>
-                    {% if order.table_id %}
+                    {% if order.delivery_type == 'delivery' %}
+                    <span class="badge bg-success"><i class="fas fa-motorcycle"></i> Yetkazib berish</span>
+                    {% if order.address %}<br><small class="text-muted">{{ order.address }}</small>{% endif %}
+                    {% elif order.table_id %}
                     <span class="badge bg-dark">Stol {{ order.table.table_number }}</span>
                     {% else %}
-                    <span class="badge bg-success"><i class="fas fa-motorcycle"></i> Yetkazib berish</span>
+                    <span class="badge bg-secondary">Olib ketish</span>
                     {% endif %}
                 </td>
                 <td>

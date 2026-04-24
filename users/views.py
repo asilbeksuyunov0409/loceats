@@ -72,6 +72,7 @@ def submit_feedback(request):
         user_phone=request.data.get('phone') or (user.phone if user else None),
         message=message,
         image=image,
+        telegram_chat_id=str(request.data.get('telegram_chat_id', '')),
     )
     
     try:
@@ -86,7 +87,8 @@ def submit_feedback(request):
         text += f"👤 *Ism:* {user_display}\n"
         text += f"📱 *Telefon:* {phone_display}\n"
         text += f"💬 *Xabar:*\n{feedback.message}\n\n"
-        text += f"🕐 *Vaqt:* {feedback.created_at.strftime('%Y-%m-%d %H:%M')}"
+        text += f"🕐 *Vaqt:* {feedback.created_at.strftime('%Y-%m-%d %H:%M')}\n\n"
+        text += f"Javob yozish uchun: /reply {feedback.id} [xabar]"
         
         requests.post(
             f'https://api.telegram.org/bot{bot_token}/sendMessage',
@@ -97,6 +99,39 @@ def submit_feedback(request):
         print(f"Telegram xato: {e}")
     
     return Response({'success': True, 'id': feedback.id})
+
+
+@api_view(['POST'])
+def reply_to_feedback(request):
+    from .models import Feedback
+    
+    feedback_id = request.data.get('feedback_id')
+    reply = request.data.get('reply', '')
+    
+    if not feedback_id or not reply:
+        return Response({'error': 'feedback_id va reply kerak'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        feedback = Feedback.objects.get(id=feedback_id)
+        feedback.admin_reply = reply
+        feedback.is_replied = True
+        feedback.save()
+        
+        if feedback.telegram_chat_id:
+            try:
+                import requests
+                bot_token = '8433417347:AAHtctEF2mDuhdUpbV43cw_cQoho4-keOk4'
+                requests.post(
+                    f'https://api.telegram.org/bot{bot_token}/sendMessage',
+                    json={'chat_id': feedback.telegram_chat_id, 'text': f"📬 *Javob:*\n{reply}", 'parse_mode': 'Markdown'},
+                    timeout=10,
+                )
+            except Exception as e:
+                print(f"Telegram xato: {e}")
+        
+        return Response({'success': True})
+    except Feedback.DoesNotExist:
+        return Response({'error': 'Feedback topilmadi'}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['GET'])

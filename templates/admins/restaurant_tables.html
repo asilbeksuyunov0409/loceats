@@ -13,13 +13,6 @@
                 <i class="fas fa-file-pdf me-2"></i> QR kodlarni PDFda yuklab olish
             </button>
         </form>
-        <form method="POST" action="/restaurant-admin/{{ restaurant.id }}/tables/" style="display:inline;">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="generate_all_qr">
-            <button type="submit" class="btn btn-success">
-                <i class="fas fa-qrcode me-2"></i> Hammasiga QR yaratish
-            </button>
-        </form>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTableModal">
             <i class="fas fa-plus me-2"></i> Stol qo'shish
         </button>

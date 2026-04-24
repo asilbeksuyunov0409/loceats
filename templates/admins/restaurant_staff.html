@@ -85,7 +85,7 @@
 </div>
 
 <!-- Add Staff Modal -->
-<div class="modal fade" id="addStaffModal" tabindex="-1">
+<div class="modal" id="addStaffModal">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
@@ -163,12 +163,12 @@
 </div>
 
 <!-- Edit Staff Modal -->
-<div class="modal fade" id="editStaffModal" tabindex="-1">
+<div class="modal" id="editStaffModal">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-warning text-dark">
                 <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Xodim tahrirlash</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" onclick="closeEditModal()"></button>
             </div>
             <form method="POST" action="/restaurant-admin/{{ restaurant.id }}/staff/">
                 {% csrf_token %}
@@ -231,7 +231,7 @@
                     <button type="button" class="btn btn-danger" onclick="deleteStaff()">
                         <i class="fas fa-trash me-1"></i> O'chirish
                     </button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bekor</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Bekor</button>
                     <button type="submit" class="btn btn-warning">Saqlash</button>
                 </div>
             </form>
@@ -250,8 +250,15 @@ function editStaff(id, name, position, phone, salary, can_orders, can_bookings, 
     document.getElementById('edit_can_bookings').checked = can_bookings;
     document.getElementById('edit_is_active').checked = is_active;
     
-    var modal = new bootstrap.Modal(document.getElementById('editStaffModal'));
-    modal.show();
+    var modal = document.getElementById('editStaffModal');
+    modal.style.display = 'block';
+    modal.classList.add('show');
+}
+
+function closeEditModal() {
+    var modal = document.getElementById('editStaffModal');
+    modal.style.display = 'none';
+    modal.classList.remove('show');
 }
 
 function deleteStaff() {

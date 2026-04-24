@@ -187,12 +187,18 @@ class Order(models.Model):
         ('delivered', 'Yetkazildi'),
         ('cancelled', 'Bekor qilingan'),
     ]
+    DELIVERY_CHOICES = [
+        ('pickup', 'Olib ketish'),
+        ('delivery', 'Yetkazib berish'),
+    ]
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='orders')
     table = models.ForeignKey(Table, on_delete=models.CASCADE, related_name='orders', null=True, blank=True)
     table_token = models.CharField(max_length=100, blank=True, null=True, verbose_name='Stol Token')
     user_name = models.CharField(max_length=100, verbose_name='Mijoz ismi')
     user_id = models.IntegerField(default=0, verbose_name='Mijoz ID')
     phone = models.CharField(max_length=20, blank=True, verbose_name='Telefon')
+    delivery_type = models.CharField(max_length=20, choices=DELIVERY_CHOICES, default='pickup', verbose_name='Yetkazish turi')
+    address = models.TextField(blank=True, verbose_name='Manzil')
     total_amount = models.DecimalField(max_digits=12, decimal_places=0, default=0, verbose_name='Umumiy summa')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name='Holati')
     note = models.TextField(blank=True, verbose_name='Izoh')
