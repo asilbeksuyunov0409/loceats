@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db.models import Q
-from datetime import timedelta
+from datetime import timedelta, datetime, time, date
 from .models import Category, Restaurant, Table, Booking, MenuCategory, MenuItem, Review, Order, OrderItem, AppSettings
 from .serializers import (
     CategorySerializer, 
@@ -156,7 +156,11 @@ def table_list(request, restaurant_id):
 @api_view(['GET', 'POST'])
 def booking_list(request):
     if request.method == 'GET':
-        bookings = Booking.objects.all()
+        phone = request.query_params.get('phone')
+        if phone:
+            bookings = Booking.objects.filter(customer_phone=phone).order_by('-booking_date', '-booking_time')
+        else:
+            bookings = Booking.objects.all()
         serializer = BookingSerializer(bookings, many=True)
         return Response(serializer.data)
     
@@ -179,7 +183,10 @@ def booking_detail(request, pk):
         return Response(serializer.data)
     
     elif request.method == 'PUT':
-        serializer = BookingSerializer(booking, data=request.data)
+        is_confirmed = request.data.get('is_confirmed')
+        if is_confirmed is not None:
+            booking.is_confirmed = is_confirmed
+        serializer = BookingSerializer(booking, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -195,6 +202,8 @@ def check_table_booking(request):
     restaurant_id = request.query_params.get('restaurant_id')
     table_id = request.query_params.get('table_id')
     phone = request.query_params.get('phone')
+    booking_date = request.query_params.get('booking_date')
+    booking_time = request.query_params.get('booking_time')
     
     if not restaurant_id or not table_id:
         return Response({'error': 'restaurant_id va table_id kerak'}, status=status.HTTP_400_BAD_REQUEST)
@@ -205,20 +214,36 @@ def check_table_booking(request):
     except (Restaurant.DoesNotExist, Table.DoesNotExist):
         return Response({'error': 'Restoran yoki stol topilmadi'}, status=status.HTTP_404_NOT_FOUND)
     
-    now = timezone.now()
-    thirty_minutes_ago = now - timedelta(minutes=30)
-    today = now.date()
+    today = timezone.now().date()
+    selected_date = today
+    selected_time = timezone.now().time()
     
-    recent_bookings = Booking.objects.filter(
+    if booking_date:
+        try:
+            parts = booking_date.split('.')
+            selected_date = date(int(parts[2]), int(parts[1]), int(parts[0]))
+        except:
+            pass
+    
+    if booking_time:
+        try:
+            time_parts = booking_time.split(':')
+            selected_time = time(int(time_parts[0]), int(time_parts[1]), 0)
+        except:
+            pass
+    
+    hour_before = (datetime.combine(selected_date, selected_time) - timedelta(hours=1)).time()
+    hour_after = (datetime.combine(selected_date, selected_time) + timedelta(hours=1)).time()
+    
+    conflicting_bookings = Booking.objects.filter(
         restaurant=restaurant,
         table=table,
-        booking_date=today,
+        booking_date=selected_date,
         is_confirmed=True,
-        booking_time__gte=thirty_minutes_ago.time()
-    )
+    ).exclude(booking_time__lt=hour_before).exclude(booking_time__gt=hour_after)
     
-    if recent_bookings.exists():
-        booking = recent_bookings.first()
+    if conflicting_bookings.exists():
+        booking = conflicting_bookings.first()
         is_own_booking = phone and booking.customer_phone == phone
         
         return Response({
@@ -230,8 +255,14 @@ def check_table_booking(request):
             'customer_phone': booking.customer_phone,
             'guest_count': booking.guest_count,
             'booking_time': booking.booking_time.strftime('%H:%M'),
-            'message': 'Bu stol yaqinda bron qilingan' if is_own_booking else 'Bu stol band'
+            'message': 'Bu vaqtda stol band' if is_own_booking else 'Bu stol yaqinda bron qilingan'
         })
+    
+    return Response({
+        'status': 'available',
+        'booked': False,
+        'is_own_booking': False,
+    })
     
     if phone:
         user_bookings = Booking.objects.filter(

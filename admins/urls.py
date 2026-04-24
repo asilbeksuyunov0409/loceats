@@ -20,6 +20,8 @@ html_patterns = [
     # Restaurant Admin Pages
     path('restaurant-admin/<int:restaurant_id>/', views_html.restaurant_admin_dashboard, name='restaurant-admin-dashboard'),
     path('restaurant-admin/<int:restaurant_id>/bookings/', views_html.restaurant_bookings_view, name='restaurant-bookings'),
+    path('restaurant-admin/<int:restaurant_id>/bookings/<int:booking_id>/confirm/', views_html.confirm_booking, name='confirm-booking'),
+    path('restaurant-admin/<int:restaurant_id>/bookings/<int:booking_id>/cancel/', views_html.cancel_booking, name='cancel-booking'),
     path('restaurant-admin/<int:restaurant_id>/tables/', views_html.restaurant_tables_view, name='restaurant-tables'),
     path('restaurant-admin/<int:restaurant_id>/menu/', views_html.restaurant_menu_view, name='restaurant-menu'),
     path('restaurant-admin/<int:restaurant_id>/staff/', views_html.restaurant_staff_view, name='restaurant-staff'),

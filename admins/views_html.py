@@ -23,7 +23,7 @@ from .serializers import (
     TableQRSerializer, NotificationSerializer
 )
 from .views import generate_qr_token
-from restaurants.models import Restaurant, Table, Booking, MenuItem, MenuCategory, Review, Category, Order, OrderItem
+from restaurants.models import Restaurant, Table, Booking, MenuItem, MenuCategory, Review, Category, Order, OrderItem, EventInvitation
 from restaurants.serializers import RestaurantListSerializer
 
 
@@ -1448,6 +1448,71 @@ def restaurant_bookings_view(request, restaurant_id):
             pass
         
         return redirect(f'/restaurant-admin/{restaurant_id}/bookings/')
+
+
+def confirm_booking(request, restaurant_id, booking_id):
+    if not _check_restaurant_admin_auth(request, restaurant_id):
+        return redirect('/restaurant-admin-login/')
+    
+    try:
+        booking = Booking.objects.get(id=booking_id, restaurant_id=restaurant_id)
+        booking.is_confirmed = True
+        booking.save()
+        
+        table = booking.table
+        table.is_available = False
+        table.save()
+        
+        if booking.event:
+            event = booking.event
+            event.status = 'active'
+            event.save()
+            
+            invitations = EventInvitation.objects.filter(event=event)
+            for inv in invitations:
+                try:
+                    import requests
+                    bot_token = '8433417347:AAHtctEF2mDuhdUpbV43cw_cQoho4-keOk4'
+                    text = f"🎉 *Tasdiqlandi!* 🎉\n\n"
+                    text += f"Tadbir: {event.title}\n"
+                    text += f"📍 Restoran: {event.restaurant.name}\n"
+                    text += f"📅 Sana: {event.event_date}\n"
+                    text += f"⏰ Vaqt: {event.event_time}\n"
+                    text += f"👥 Joylar soni: {event.max_guests}\n\n"
+                    text += "Sizning taklifnomaingiz tasdiqlandi!"
+                    
+                    requests.post(
+                        f'https://api.telegram.org/bot{bot_token}/sendMessage',
+                        json={'chat_id': inv.guest_phone.replace('+', ''), 'text': text, 'parse_mode': 'Markdown'},
+                        timeout=10,
+                    )
+                except Exception as e:
+                    print(f"Taklifnoma yuborish xato: {e}")
+    except Exception as e:
+        print(f"Booking confirm xato: {e}")
+    
+    return redirect(f'/restaurant-admin/{restaurant_id}/bookings/')
+
+
+def cancel_booking(request, restaurant_id, booking_id):
+    if not _check_restaurant_admin_auth(request, restaurant_id):
+        return redirect('/restaurant-admin-login/')
+    
+    try:
+        booking = Booking.objects.get(id=booking_id, restaurant_id=restaurant_id)
+        
+        table = booking.table
+        table.is_available = True
+        table.save()
+        
+        booking.delete()
+    except Exception as e:
+        print(f"Booking cancel xato: {e}")
+    
+    return redirect(f'/restaurant-admin/{restaurant_id}/bookings/')
+
+
+def restaurant_bookings_view(request, restaurant_id):
     
     today = timezone.now().date()
     
