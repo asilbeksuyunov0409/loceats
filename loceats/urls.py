@@ -56,6 +56,7 @@ urlpatterns = [
     path('api/', include('restaurants.urls')),
     path('api/auth/', include('users.urls')),
     path('api/admin/', include((api_patterns, 'admins'))),
+    path('webhook/', include('webhook.urls')),
 ]
 
 # Media fayllarni serve qilish - DEBUG dan qat'iy nazar
