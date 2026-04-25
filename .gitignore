@@ -2,4 +2,4 @@
 echo "loceats/settings.py" >> /home/loceats1/loyha3/loyha/.gitignore
 git add .gitignore
 git commit -m "ignore settings.py"
-git push origin main
+git push origin maindeploy.sh
