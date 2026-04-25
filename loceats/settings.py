@@ -1,3 +1,6 @@
+import pymysql
+pymysql.install_as_MySQLdb()
+
 import os
 from pathlib import Path
 
@@ -66,10 +69,10 @@ WSGI_APPLICATION = 'loceats.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'loceats_db',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': 'mysql-8.4',
+        'NAME': 'loceats1_loceats_db',
+        'USER': 'loceats1_asilbek',
+        'PASSWORD': 'Asilbek@2005',
+        'HOST': 'localhost',
         'PORT': '3306',
         'OPTIONS': {
             'charset': 'utf8mb4',
