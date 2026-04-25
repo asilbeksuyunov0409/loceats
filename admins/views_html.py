@@ -1050,19 +1050,24 @@ def superadmin_feedbacks_view(request):
                 feedback.save()
                 
                 try:
-                    import telegram
+                    import requests
                     bot_token = '8433417347:AAHtctEF2mDuhdUpbV43cw_cQoho4-keOk4'
-                    chat_id = '8433417347'
-                    bot = telegram.Bot(token=bot_token)
                     
-                    text = f"📩 *Admin javobi!*\n\n"
-                    text += f"💬 *Javob:*\n{reply}\n\n"
-                    text += f"🕐 *Vaqt:* {timezone.now().strftime('%Y-%m-%d %H:%M')}"
+                    user_chat_id = feedback.telegram_chat_id if feedback.telegram_chat_id else None
                     
-                    import asyncio
-                    async def send_msg():
-                        await bot.send_message(chat_id=chat_id, text=text, parse_mode='Markdown')
-                    asyncio.run(send_msg())
+                    if not user_chat_id:
+                        from restaurants.models import AppSettings
+                        setting = AppSettings.objects.filter(key='admin_telegram_chat_id').first()
+                        if setting and setting.value:
+                            user_chat_id = setting.value
+                    
+                    if user_chat_id:
+                        text = f"📬 *LocEats javobi:*\n\n{reply}\n\n🕐 {timezone.now().strftime('%Y-%m-%d %H:%M')}"
+                        requests.post(
+                            f'https://api.telegram.org/bot{bot_token}/sendMessage',
+                            json={'chat_id': user_chat_id, 'text': text, 'parse_mode': 'Markdown'},
+                            timeout=10,
+                        )
                 except Exception as e:
                     print(f"Telegram reply xato: {e}")
             except:

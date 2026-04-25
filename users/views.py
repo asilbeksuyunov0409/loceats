@@ -79,19 +79,31 @@ def submit_feedback(request):
         import requests
         bot_token = '8433417347:AAHtctEF2mDuhdUpbV43cw_cQoho4-keOk4'
         
-        updates = requests.get(f'https://api.telegram.org/bot{bot_token}/getUpdates', timeout=5)
-        if updates.status_code == 200:
-            data = updates.json()
-            results = data.get('result', [])
-            if results:
-                for update in results:
-                    msg = update.get('message', {})
-                    chat = msg.get('chat', {})
-                    if chat.get('id'):
-                        chat_id = str(chat['id'])
-                        break
+        # Admin chat_id sini AppSettings dan olish
+        admin_chat_id = None
+        try:
+            from restaurants.models import AppSettings
+            setting = AppSettings.objects.filter(key='admin_telegram_chat_id').first()
+            if setting and setting.value:
+                admin_chat_id = setting.value
+        except:
+            pass
         
-        chat_id = chat_id or '8433417347'
+        # Yoki getUpdates dan olish
+        if not admin_chat_id:
+            try:
+                updates = requests.get(f'https://api.telegram.org/bot{bot_token}/getUpdates', timeout=5)
+                if updates.status_code == 200:
+                    for update in updates.json().get('result', []):
+                        msg = update.get('message', {})
+                        if msg.get('chat', {}).get('id'):
+                            admin_chat_id = str(msg['chat']['id'])
+                            break
+            except:
+                pass
+        
+        if not admin_chat_id:
+            admin_chat_id = '8433417347'
         
         user_display = feedback.user_name or "Nomalum"
         phone_display = feedback.user_phone or "Nomalum"
@@ -101,11 +113,11 @@ def submit_feedback(request):
         text += f"📱 *Telefon:* {phone_display}\n"
         text += f"💬 *Xabar:*\n{feedback.message}\n\n"
         text += f"🕐 *Vaqt:* {feedback.created_at.strftime('%Y-%m-%d %H:%M')}\n\n"
-        text += f"Javob yozish uchun: /reply {feedback.id} [xabar]"
+        text += f"Javob berish: /reply {feedback.id} [xabar]"
         
         resp = requests.post(
             f'https://api.telegram.org/bot{bot_token}/sendMessage',
-            json={'chat_id': chat_id, 'text': text, 'parse_mode': 'Markdown'},
+            json={'chat_id': admin_chat_id, 'text': text, 'parse_mode': 'Markdown'},
             timeout=10,
         )
         print(f"Telegram yuborildi: {resp.status_code}")
