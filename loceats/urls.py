@@ -23,6 +23,7 @@ urlpatterns = [
     path('admin-panel/chat/', views_html.superadmin_chat_view, name='superadmin-chat-page'),
     path('admin-panel/users/', views_html.superadmin_users_view, name='superadmin-users-page'),
     path('admin-panel/orders/', views_html.superadmin_orders_view, name='superadmin-orders-page'),
+    path('admin-panel/feedbacks/', views_html.superadmin_feedbacks_view, name='superadmin-feedbacks-page'),
     
     # Restaurant Admin Pages
     path('restaurant-admin/', views_html.restaurant_admin_login_page, name='restaurant-admin-login'),
