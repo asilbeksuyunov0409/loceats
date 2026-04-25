@@ -78,7 +78,20 @@ def submit_feedback(request):
     try:
         import requests
         bot_token = '8433417347:AAHtctEF2mDuhdUpbV43cw_cQoho4-keOk4'
-        chat_id = '8433417347'
+        
+        updates = requests.get(f'https://api.telegram.org/bot{bot_token}/getUpdates', timeout=5)
+        if updates.status_code == 200:
+            data = updates.json()
+            results = data.get('result', [])
+            if results:
+                for update in results:
+                    msg = update.get('message', {})
+                    chat = msg.get('chat', {})
+                    if chat.get('id'):
+                        chat_id = str(chat['id'])
+                        break
+        
+        chat_id = chat_id or '8433417347'
         
         user_display = feedback.user_name or "Nomalum"
         phone_display = feedback.user_phone or "Nomalum"
@@ -90,11 +103,12 @@ def submit_feedback(request):
         text += f"🕐 *Vaqt:* {feedback.created_at.strftime('%Y-%m-%d %H:%M')}\n\n"
         text += f"Javob yozish uchun: /reply {feedback.id} [xabar]"
         
-        requests.post(
+        resp = requests.post(
             f'https://api.telegram.org/bot{bot_token}/sendMessage',
             json={'chat_id': chat_id, 'text': text, 'parse_mode': 'Markdown'},
             timeout=10,
         )
+        print(f"Telegram yuborildi: {resp.status_code}")
     except Exception as e:
         print(f"Telegram xato: {e}")
     
