@@ -1,6 +1,5 @@
 Django>=4.2
 djangorestframework>=3.14
-mysqlclient>=2.2
 PyMySQL==1.1.0
 Pillow>=10.0
 django-cors-headers>=4.3
