@@ -55,6 +55,46 @@ def update_user(request):
     return Response(UserSerializer(request.user).data)
 
 
+def get_admin_chat_id():
+    """Admin Telegram chat_id sini olish"""
+    admin_chat_id = None
+    
+    # 1. AppSettings dan olish
+    try:
+        from restaurants.models import AppSettings
+        setting = AppSettings.objects.filter(key='admin_telegram_chat_id').first()
+        if setting and setting.value:
+            admin_chat_id = setting.value
+    except:
+        pass
+    
+    # 2. getUpdates dan olish (oxirgi xabar berguvchi)
+    if not admin_chat_id:
+        try:
+            import requests
+            bot_token = '8433417347:AAHtctEF2mDuhdUpbV43cw_cQoho4-keOk4'
+            updates = requests.get(f'https://api.telegram.org/bot{bot_token}/getUpdates', timeout=5)
+            if updates.status_code == 200:
+                for update in updates.json().get('result', []):
+                    msg = update.get('message', {})
+                    chat = msg.get('chat', {})
+                    if chat.get('id') and not chat.get('is_bot'):
+                        admin_chat_id = str(chat['id'])
+                        # AppSettings ga saqlash
+                        try:
+                            AppSettings.objects.update_or_create(
+                                key='admin_telegram_chat_id',
+                                defaults={'value': admin_chat_id}
+                            )
+                        except:
+                            pass
+                        break
+        except:
+            pass
+    
+    return admin_chat_id
+
+
 @api_view(['POST'])
 def submit_feedback(request):
     from .models import Feedback
@@ -78,49 +118,27 @@ def submit_feedback(request):
     try:
         import requests
         bot_token = '8433417347:AAHtctEF2mDuhdUpbV43cw_cQoho4-keOk4'
-        
-        # Admin chat_id sini AppSettings dan olish
-        admin_chat_id = None
-        try:
-            from restaurants.models import AppSettings
-            setting = AppSettings.objects.filter(key='admin_telegram_chat_id').first()
-            if setting and setting.value:
-                admin_chat_id = setting.value
-        except:
-            pass
-        
-        # Yoki getUpdates dan olish
-        if not admin_chat_id:
-            try:
-                updates = requests.get(f'https://api.telegram.org/bot{bot_token}/getUpdates', timeout=5)
-                if updates.status_code == 200:
-                    for update in updates.json().get('result', []):
-                        msg = update.get('message', {})
-                        if msg.get('chat', {}).get('id'):
-                            admin_chat_id = str(msg['chat']['id'])
-                            break
-            except:
-                pass
+        admin_chat_id = get_admin_chat_id()
         
         if not admin_chat_id:
-            admin_chat_id = '8433417347'
-        
-        user_display = feedback.user_name or "Nomalum"
-        phone_display = feedback.user_phone or "Nomalum"
-        
-        text = f"📩 *Yangi Fikr-mulohaza!*\n\n"
-        text += f"👤 *Ism:* {user_display}\n"
-        text += f"📱 *Telefon:* {phone_display}\n"
-        text += f"💬 *Xabar:*\n{feedback.message}\n\n"
-        text += f"🕐 *Vaqt:* {feedback.created_at.strftime('%Y-%m-%d %H:%M')}\n\n"
-        text += f"Javob berish: /reply {feedback.id} [xabar]"
-        
-        resp = requests.post(
-            f'https://api.telegram.org/bot{bot_token}/sendMessage',
-            json={'chat_id': admin_chat_id, 'text': text, 'parse_mode': 'Markdown'},
-            timeout=10,
-        )
-        print(f"Telegram yuborildi: {resp.status_code}")
+            print("Admin Telegram chat_id topilmadi - /start buyrug'ini bering")
+        else:
+            user_display = feedback.user_name or "Nomalum"
+            phone_display = feedback.user_phone or "Nomalum"
+            
+            text = f"📩 *Yangi Fikr-mulohaza!*\n\n"
+            text += f"👤 *Ism:* {user_display}\n"
+            text += f"📱 *Telefon:* {phone_display}\n"
+            text += f"💬 *Xabar:*\n{feedback.message}\n\n"
+            text += f"🕐 *Vaqt:* {feedback.created_at.strftime('%Y-%m-%d %H:%M')}\n\n"
+            text += f"Javob berish: /reply {feedback.id} [xabar]"
+            
+            resp = requests.post(
+                f'https://api.telegram.org/bot{bot_token}/sendMessage',
+                json={'chat_id': admin_chat_id, 'text': text, 'parse_mode': 'Markdown'},
+                timeout=10,
+            )
+            print(f"Telegram yuborildi: {resp.status_code}")
     except Exception as e:
         print(f"Telegram xato: {e}")
     
