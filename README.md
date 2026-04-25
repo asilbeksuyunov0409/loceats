@@ -81,3 +81,4 @@ fetch('http://127.0.0.1:8000/api/restaurants/', {
 - Database: loceats_db
 
 OpenServer da MySQL parolini `Settings > Modules > MySQL` dan o'rnating.
+salom
