@@ -1,6 +1,7 @@
 from django.http import JsonResponse
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.utils.decorators import method_decorator
 
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -10,74 +11,73 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 
-# Regular Django view for feedback with file upload
-@csrf_exempt
-@require_POST
-def submit_feedback_simple(request):
-    from .models import Feedback
-    
-    message = request.POST.get('message', '') or ''
-    
-    if not message:
-        return JsonResponse({'error': 'Xabar yoq'}, status=400)
-    
-    # Get user from token
-    auth_header = request.headers.get('Authorization', '')
-    user = None
-    if auth_header.startswith('Token '):
-        token_key = auth_header[6:]
+@method_decorator(csrf_exempt)
+class SubmitFeedbackView(View):
+    def post(self, request):
+        from .models import Feedback
+        
+        # Get message from POST data
+        message = request.POST.get('message', '') or ''
+        
+        if not message:
+            return JsonResponse({'error': 'Xabar yoq'}, status=400)
+        
+        # Get user from token header
+        auth_header = request.headers.get('Authorization', '') or request.META.get('HTTP_AUTHORIZATION', '')
+        user = None
+        if auth_header.startswith('Token '):
+            token_key = auth_header[6:].strip()
+            try:
+                token = Token.objects.get(key=token_key)
+                user = token.user
+            except Token.DoesNotExist:
+                pass
+            except:
+                pass
+        
+        # Get image from FILES
+        image = request.FILES.get('image') if request.FILES else None
+        
+        # Get user info
+        first_name = request.POST.get('first_name') or (user.first_name if user else 'Mehmon')
+        last_name = request.POST.get('last_name') or (user.last_name if user else '')
+        user_name = f"{first_name} {last_name}".strip()
+        user_phone = request.POST.get('phone') or (user.phone if user else None)
+        
+        # Create feedback
+        feedback = Feedback.objects.create(
+            user=user,
+            user_name=user_name,
+            user_phone=user_phone,
+            message=message,
+            image=image,
+        )
+        
+        # Try to send to Telegram (don't fail if this errors)
         try:
-            token = Token.objects.get(key=token_key)
-            user = token.user
+            admin_chat_id = None
+            from restaurants.models import AppSettings
+            setting = AppSettings.objects.filter(key='admin_telegram_chat_id').first()
+            if setting and setting.value:
+                admin_chat_id = setting.value
+            
+            if admin_chat_id:
+                import requests
+                bot_token = '8433417347:AAHtctEF2mDuhdUpbV43cw_cQoho4-keOk4'
+                
+                text = f"Yangi Fikr-mulohaza!\nIsm: {user_name}\nTelefon: {user_phone or 'yoq'}\nXabar: {message[:100]}"
+                
+                requests.post(
+                    f'https://api.telegram.org/bot{bot_token}/sendMessage',
+                    json={'chat_id': admin_chat_id, 'text': text},
+                    timeout=5,
+                )
         except:
             pass
-    
-    image = request.FILES.get('image')
-    
-    first_name = request.POST.get('first_name') or (user.first_name if user else 'Mehmon')
-    last_name = request.POST.get('last_name') or (user.last_name if user else '')
-    user_name = f"{first_name} {last_name}".strip()
-    user_phone = request.POST.get('phone') or (user.phone if user else None)
-    
-    feedback = Feedback.objects.create(
-        user=user,
-        user_name=user_name,
-        user_phone=user_phone,
-        message=message,
-        image=image,
-    )
-    
-    # Telegram botga yuborish
-    try:
-        admin_chat_id = None
-        from restaurants.models import AppSettings
-        setting = AppSettings.objects.filter(key='admin_telegram_chat_id').first()
-        if setting and setting.value:
-            admin_chat_id = setting.value
         
-        if admin_chat_id:
-            import requests
-            bot_token = '8433417347:AAHtctEF2mDuhdUpbV43cw_cQoho4-keOk4'
-            
-            user_display = feedback.user_name or "Nomalum"
-            phone_display = feedback.user_phone or "Nomalum"
-            time_str = feedback.created_at.strftime('%Y-%m-%d %H:%M')
-            
-            text = f"📩 Yangi Fikr-mulohaza!\n\n"
-            text += f"Ism: {user_display}\n"
-            text += f"Telefon: {phone_display}\n"
-            text += f"Xabar: {message[:200]}\n"
-            text += f"Vaqt: {time_str}"
-            
-            requests.post(
-                f'https://api.telegram.org/bot{bot_token}/sendMessage',
-                json={'chat_id': admin_chat_id, 'text': text},
-                timeout=10,
-            )
-    except:
-        pass
-    
-    return JsonResponse({'success': True, 'id': feedback.id})
+        return JsonResponse({'success': True, 'id': feedback.id})
+
+submit_feedback_simple = SubmitFeedbackView.as_view()
 
 
 @api_view(['POST'])
