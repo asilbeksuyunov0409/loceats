@@ -184,7 +184,16 @@ def reply_to_feedback(request):
 def get_feedbacks(request):
     from .models import Feedback
     
-    feedbacks = Feedback.objects.filter(user=request.user).order_by('-created_at')
+    user_phone = request.query_params.get('phone')
+    if not user_phone:
+        user_phone = request.user.phone if hasattr(request.user, 'phone') and request.user.phone else None
+    
+    feedbacks = Feedback.objects.filter(user=request.user) if request.user.is_authenticated else Feedback.objects.none()
+    
+    if user_phone and not feedbacks.exists():
+        feedbacks = Feedback.objects.filter(user_phone=user_phone)
+    
+    feedbacks = feedbacks.order_by('-created_at')
     data = []
     for f in feedbacks:
         data.append({
