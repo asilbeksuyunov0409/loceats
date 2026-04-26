@@ -115,7 +115,7 @@ def submit_feedback(request):
         telegram_chat_id=str(request.data.get('telegram_chat_id', '')),
     )
     
-    # Telegram botga yuborish
+    # Telegram botga yuborish va message ID ni JSON ga saqlash
     try:
         admin_chat_id = get_admin_chat_id()
         if admin_chat_id:
@@ -139,7 +139,27 @@ def submit_feedback(request):
                 timeout=10,
             )
             if resp.status_code == 200:
-                print(f"Telegram yuborildi: {resp.status_code}")
+                result = resp.json()
+                if result.get('ok'):
+                    msg_id = result.get('result', {}).get('message_id')
+                    # JSON faylga saqlash
+                    import json, os
+                    project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                    msg_file = os.path.join(project_dir, 'feedback_msg_ids.json')
+                    data = {}
+                    try:
+                        if os.path.exists(msg_file):
+                            with open(msg_file, 'r') as f:
+                                data = json.load(f)
+                    except:
+                        pass
+                    data[str(msg_id)] = feedback.id
+                    try:
+                        with open(msg_file, 'w') as f:
+                            json.dump(data, f)
+                    except:
+                        pass
+                    print(f"Telegram yuborildi, msg_id: {msg_id}")
     except Exception as e:
         print(f"Telegram xato: {e}")
     

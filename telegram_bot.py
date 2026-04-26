@@ -2,18 +2,11 @@
 """
 LocEats Telegram Bot
 Fikr-mulohazalarni qabul qilish va javob berish
-
-Ishga tushirish:
-    python telegram_bot.py
-
-Bot komandalari:
-    /start - Botni ishga tushirish
-    /feedbacks - Oxirgi fikr-mulohazalar ro'yxati
-    /reply [id] [xabar] - Javob berish (eski usul)
 """
 
 import os
 import sys
+import json
 import django
 import time
 import requests
@@ -22,7 +15,6 @@ from datetime import datetime
 # Django sozlamalari
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'loceats.settings')
 
-# Loyiha papkasiga o'tish
 project_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, project_dir)
 django.setup()
@@ -31,12 +23,39 @@ django.setup()
 BOT_TOKEN = '8433417347:AAHtctEF2mDuhdUpbV43cw_cQoho4-keOk4'
 BOT_URL = f'https://api.telegram.org/bot{BOT_TOKEN}'
 
-# Xabarlarni saqlash uchun lug'at (keyinchalik database ga o'tkaziladi)
-# Key: telegram_message_id, Value: feedback_id
-telegram_to_feedback = {}
+# JSON fayl orqali message ID larni saqlash
+MSG_ID_FILE = os.path.join(project_dir, 'feedback_msg_ids.json')
+
+def load_msg_ids():
+    """JSON dan message ID larni o'qish"""
+    try:
+        if os.path.exists(MSG_ID_FILE):
+            with open(MSG_ID_FILE, 'r') as f:
+                return json.load(f)
+    except:
+        pass
+    return {}
+
+def save_msg_ids(data):
+    """JSON ga message ID larni saqlash"""
+    try:
+        with open(MSG_ID_FILE, 'w') as f:
+            json.dump(data, f)
+    except:
+        pass
+
+def add_msg_id(telegram_msg_id, feedback_id):
+    """Yangi message ID qo'shish"""
+    data = load_msg_ids()
+    data[str(telegram_msg_id)] = feedback_id
+    save_msg_ids(data)
+
+def get_feedback_id(telegram_msg_id):
+    """Telegram message ID dan feedback ID olish"""
+    data = load_msg_ids()
+    return data.get(str(telegram_msg_id))
 
 def log(msg):
-    """Log xabarlarini chiqarish"""
     print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
 
 def send_message(chat_id, text, reply_to_message_id=None):
@@ -47,12 +66,10 @@ def send_message(chat_id, text, reply_to_message_id=None):
             data['reply_to_message_id'] = reply_to_message_id
         resp = requests.post(f'{BOT_URL}/sendMessage', json=data, timeout=10)
         
-        # Bot yuborgan xabarning ID sini olish (javob berish uchun kerak)
         if resp.status_code == 200:
             result = resp.json()
             if result.get('ok'):
-                msg_id = result.get('result', {}).get('message_id')
-                return msg_id
+                return result.get('result', {}).get('message_id')
         return None
     except Exception as e:
         log(f"Xabar yuborishda xato: {e}")
@@ -81,10 +98,24 @@ def get_admin_chat_id():
     except:
         return None
 
+def reply_to_feedback(feedback_id, reply_text):
+    """Feedback ga javob berish"""
+    try:
+        from users.models import Feedback
+        feedback = Feedback.objects.get(id=int(feedback_id))
+        feedback.admin_reply = reply_text
+        feedback.is_replied = True
+        feedback.save()
+        log(f"Feedback #{feedback_id} ga javob berildi: {reply_text[:50]}...")
+        return True, "Javob saqlandi!"
+    except Exception as e:
+        return False, f"Xato: {e}"
+
 def send_feedback_to_telegram(feedback_id, user_name, phone, message, time_str):
-    """Fikr-mulohazani Telegramga yuborish va javob uchun tayyorlash"""
+    """Fikr-mulohazani Telegramga yuborish"""
     admin_chat_id = get_admin_chat_id()
     if not admin_chat_id:
+        log("Admin chat_id topilmadi")
         return None
     
     text = f"📩 *Yangi Fikr-mulohaza!*\n\n"
@@ -92,37 +123,18 @@ def send_feedback_to_telegram(feedback_id, user_name, phone, message, time_str):
     text += f"📱 *Telefon:* {phone}\n"
     text += f"💬 *Xabar:*\n{message}\n\n"
     text += f"🕐 *Vaqt:* {time_str}\n\n"
-    text += f"Javob berish uchun shu xabarni cherting!"
+    text += f"Shu xabarni CHERTING va javob yozing!"
     
     msg_id = send_message(admin_chat_id, text)
     
     if msg_id:
-        telegram_to_feedback[msg_id] = feedback_id
+        add_msg_id(msg_id, feedback_id)
         log(f"Feedback #{feedback_id} Telegramga yuborildi (msg_id: {msg_id})")
     
     return msg_id
 
-def reply_to_feedback(feedback_id, reply_text):
-    """Feedback ga javob berish va foydalanuvchiga yuborish"""
-    try:
-        from users.models import Feedback
-        
-        try:
-            feedback = Feedback.objects.get(id=int(feedback_id))
-        except Feedback.DoesNotExist:
-            return False, "Feedback topilmadi"
-        
-        feedback.admin_reply = reply_text
-        feedback.is_replied = True
-        feedback.save()
-        
-        log(f"Feedback #{feedback_id} ga javob berildi: {reply_text[:50]}...")
-        return True, "Javob saqlandi"
-    except Exception as e:
-        return False, f"Xato: {e}"
-
 def list_feedbacks():
-    """Oxirgi fikr-mulohazalarni ro'yxatini olish"""
+    """Oxirgi fikr-mulohazalar ro'yxati"""
     try:
         from users.models import Feedback
         feedbacks = Feedback.objects.filter(is_replied=False).order_by('-created_at')[:10]
@@ -135,63 +147,12 @@ def list_feedbacks():
             name = fb.user_name or "Nomalum"
             message = fb.message[:60] + "..." if len(fb.message) > 60 else fb.message
             time_str = fb.created_at.strftime('%d.%m %H:%M')
-            msg += f"#{fb.id} [{time_str}]\n"
-            msg += f"👤 {name}\n"
-            msg += f"💬 {message}\n\n"
+            msg += f"#{fb.id} [{time_str}]\n👤 {name}\n💬 {message}\n\n"
         
-        msg += "\n📝 Javob berish: xabarni chertib javob yozing, yoki\n"
-        msg += "/reply [id] [xabar]"
+        msg += "\nJavob berish: xabarni cherting yoki /reply [id] [xabar]"
         return msg
     except Exception as e:
         return f"Xato: {e}"
-
-def handle_command(chat_id, command, args, reply_to_msg_id=None):
-    """Bot komandalarini ishga tushirish"""
-    command = command.lower()
-    
-    if command == '/start':
-        save_admin_chat_id(chat_id)
-        msg = "👋 *LocEats Botga xush kelibsiz!*\n\n"
-        msg += "Bu bot fikr-mulohazalarni qabul qiladi va javob berish imkonini beradi.\n\n"
-        msg += "📋 *Foydalanish:*\n"
-        msg += "• Yangi fikr-mulohaza kelganda, shu xabarni cherting\n"
-        msg += "• Va javob yozing - avtomatik saqlanadi!\n\n"
-        msg += "📝 *Komandalar:*\n"
-        msg += "/feedbacks - Ro'yxat\n"
-        msg += "/help - Yordam"
-        send_message(chat_id, msg)
-        return True
-    
-    elif command == '/feedbacks':
-        msg = list_feedbacks()
-        send_message(chat_id, msg)
-        return True
-    
-    elif command == '/help':
-        msg = "📖 *Yordam:*\n\n"
-        msg += "1. Yangi fikr-mulohaza kelganda shu xabarni CHERTING\n"
-        msg += "2. Javob yozing - avtomatik foydalanuvchiga yuboriladi!\n\n"
-        msg += "Yoki komanda bilan:\n"
-        msg += "/reply [id] [xabar]"
-        send_message(chat_id, msg)
-        return True
-    
-    elif command == '/reply':
-        if len(args) < 2:
-            send_message(chat_id, "❌ Format: /reply [id] [xabar]\n\nMasalan: /reply 5 Rahmat, yaxshi ish!")
-            return True
-        
-        feedback_id = args[0]
-        reply_text = ' '.join(args[1:])
-        
-        success, result = reply_to_feedback(feedback_id, reply_text)
-        if success:
-            send_message(chat_id, f"✅ {result}")
-        else:
-            send_message(chat_id, f"❌ {result}")
-        return True
-    
-    return False
 
 def handle_message(update):
     """Xabarni qayta ishlash"""
@@ -208,55 +169,61 @@ def handle_message(update):
     
     admin_chat_id = get_admin_chat_id()
     
-    # Agar bu admin bo'lmasa
+    # Admin ekanligini tekshirish
     if str(chat_id) != str(admin_chat_id):
-        send_message(chat_id, "🤖 Bu bot LocEats adminlari uchun. /start buyrug'ini bering.")
+        if text == '/start':
+            save_admin_chat_id(chat_id)
+            send_message(chat_id, "👋 *LocEats Botga xush kelibsiz!*\n\nFikr-mulohazalarni shu yerdan ko'rishingiz va javob berishingiz mumkin.")
+        else:
+            send_message(chat_id, "🤖 Bu bot LocEats adminlari uchun. /start buyrug'ini bering.")
         return True
     
-    # Agar xabar boshqa xabarga javob bo'lsa (eng muhim!)
+    # Reply (xabarni chertish)
     if reply_to:
         original_msg_id = reply_to.get('message_id')
+        feedback_id = get_feedback_id(original_msg_id)
         
-        # Bu xabar biz yuborgan feedback xabari edimi?
-        if original_msg_id in telegram_to_feedback:
-            feedback_id = telegram_to_feedback[original_msg_id]
+        if feedback_id:
             success, result = reply_to_feedback(feedback_id, text)
-            
             if success:
-                send_message(chat_id, f"✅ Javob saqlandi va foydalanuvchiga yuborildi!", original_msg_id)
-                log(f"Feedback #{feedback_id} ga javob berildi (reply): {text[:50]}...")
+                send_message(chat_id, "✅ Javob saqlandi!", original_msg_id)
             else:
                 send_message(chat_id, f"❌ {result}", original_msg_id)
-            return True
         else:
-            # Bu biz yuborgan xabar emas, lekin reply qilingan
-            # ID sini ajratib ko'rishga harakat qilamiz
-            original_text = reply_to.get('text', '')
-            if '#' in original_text:
-                for word in original_text.split():
-                    if word.startswith('#') and word[1:].isdigit():
-                        feedback_id = int(word[1:])
-                        success, result = reply_to_feedback(feedback_id, text)
-                        if success:
-                            send_message(chat_id, f"✅ Javob saqlandi!", original_msg_id)
-                        else:
-                            send_message(chat_id, f"❌ {result}", original_msg_id)
-                        return True
-            
-            send_message(chat_id, "❌ Bu xabarga javob berib bo'lmaydi. /help ko'ring.", original_msg_id)
-            return True
+            send_message(chat_id, "❌ Bu xabarni aniqlab bo'lmaydi.", original_msg_id)
+        return True
     
-    # Komanda bo'lsa
+    # Komandalar
     if text.startswith('/'):
-        parts = text.strip().split(' ', 1)
-        command = parts[0]
-        args_text = parts[1] if len(parts) > 1 else ''
-        args = args_text.split(' ') if args_text else []
-        
-        return handle_command(chat_id, command, args)
+        if text == '/start':
+            save_admin_chat_id(chat_id)
+            msg = "👋 *LocEats Botga xush kelibsiz!*\n\n"
+            msg += "📋 *Foydalanish:*\n"
+            msg += "• Yangi fikr-mulohaza kelganda shu xabarni CHERTING\n"
+            msg += "• Va javob yozing!\n\n"
+            msg += "/feedbacks - Ro'yxat\n"
+            msg += "/help - Yordam"
+            send_message(chat_id, msg)
+        elif text == '/feedbacks':
+            send_message(chat_id, list_feedbacks())
+        elif text == '/help':
+            msg = "📖 *Yordam:*\n\n"
+            msg += "1. Yangi xabar kelganda shu xabarni CHERTING (Reply)\n"
+            msg += "2. Javob yozing - avtomatik saqlanadi!\n\n"
+            msg += "Yoki: /reply [id] [xabar]"
+            send_message(chat_id, msg)
+        elif text.startswith('/reply '):
+            parts = text[7:].split(' ', 1)
+            if len(parts) >= 2:
+                feedback_id, reply_text = parts
+                success, result = reply_to_feedback(feedback_id, reply_text)
+                send_message(chat_id, f"{'✅' if success else '❌'} {result}")
+            else:
+                send_message(chat_id, "❌ Format: /reply [id] [xabar]")
+        return True
     
     # Oddiy xabar
-    send_message(chat_id, "📩 Xabar qabul qilindi.\n\nJavob berish uchun fikr-mulohaza xabarni cherting, yoki /help yozing.")
+    send_message(chat_id, "📩 Xabar qabul qilindi.\n\nJavob berish uchun fikr-mulohaza xabarni cherting.")
     return True
 
 def poll_updates():
@@ -264,10 +231,46 @@ def poll_updates():
     offset = None
     
     admin_id = get_admin_chat_id()
-    admin_display = admin_id if admin_id else "Hali o'rnatilmagan"
-    
     log("Bot ishga tushdi...")
-    log(f"Admin chat_id: {admin_display}")
+    log(f"Admin chat_id: {admin_id or 'Hali o\\'rnatilmagan'}")
+    
+    while True:
+        try:
+            params = {'timeout': 30}
+            if offset:
+                params['offset'] = offset
+            
+            resp = requests.get(f'{BOT_URL}/getUpdates', params=params, timeout=35)
+            
+            if resp.status_code != 200:
+                time.sleep(5)
+                continue
+            
+            data = resp.json()
+            if not data.get('ok'):
+                time.sleep(5)
+                continue
+            
+            updates = data.get('result', [])
+            if not updates:
+                continue
+            
+            for update in updates:
+                update_id = update.get('update_id')
+                
+                if 'message' in update:
+                    handle_message(update)
+                
+                offset = update_id + 1
+            
+            if not offset and updates:
+                offset = updates[-1].get('update_id', 0) + 1
+            
+        except requests.exceptions.Timeout:
+            continue
+        except Exception as e:
+            log(f"Xato: {e}")
+            time.sleep(5)
 
 if __name__ == '__main__':
     print("=" * 50)

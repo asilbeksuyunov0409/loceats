@@ -14,6 +14,7 @@ class Feedback(models.Model):
     user_name = models.CharField(max_length=100, blank=True, null=True)
     user_phone = models.CharField(max_length=20, blank=True, null=True)
     telegram_chat_id = models.CharField(max_length=50, blank=True, null=True)
+    telegram_msg_id = models.IntegerField(blank=True, null=True)
     message = models.TextField()
     image = models.ImageField(upload_to='feedback/', blank=True, null=True)
     admin_reply = models.TextField(blank=True, null=True)
