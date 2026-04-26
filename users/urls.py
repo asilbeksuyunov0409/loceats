@@ -7,6 +7,7 @@ urlpatterns = [
     path('me/', views.me, name='me'),
     path('user/', views.update_user, name='update_user'),
     path('feedback/', views.submit_feedback, name='submit_feedback'),
+    path('feedback/send/', views.submit_feedback_simple, name='submit_feedback_simple'),
     path('feedbacks/', views.get_feedbacks, name='get_feedbacks'),
     path('feedback/reply/', views.reply_to_feedback, name='reply_to_feedback'),
 ]

@@ -1,10 +1,13 @@
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+
 from rest_framework import status
-from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.permissions import IsAuthenticated
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 
 @api_view(['POST'])
@@ -19,11 +22,97 @@ def register(request):
         }, status=status.HTTP_201_CREATED)
     return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.utils.decorators import method_decorator
+
+# Regular Django view for feedback with file upload
+@csrf_exempt
+@require_POST
+def submit_feedback_simple(request):
+    from .models import Feedback
+    
+    message = request.POST.get('message', '') or ''
+    
+    if not message:
+        return JsonResponse({'error': 'Xabar bo\'sh bo\'lishi mumkin'}, status=400)
+    
+    # Get message from body if posted as raw text (for multipart)
+    if not message and request.body:
+        try:
+            body_str = request.body.decode('utf-8')
+            for line in body_str.split('&'):
+                if line.startswith('message='):
+                    message = line.split('=')[1]
+                    message = message.replace('+', ' ')
+                    break
+        except:
+            pass
+    
+    # Get user from token
+    auth_header = request.headers.get('Authorization', '')
+    user = None
+    if auth_header.startswith('Token '):
+        token_key = auth_header[6:]
+        from rest_framework.authtoken.models import Token
+        try:
+            token = Token.objects.get(key=token_key)
+            user = token.user
+        except:
+            pass
+    
+    image = request.FILES.get('image')
+    
+    first_name = request.POST.get('first_name') or (user.first_name if user else 'Mehmon')
+    last_name = request.POST.get('last_name') or (user.last_name if user else '')
+    user_name = f"{first_name} {last_name}".strip()
+    user_phone = request.POST.get('phone') or (user.phone if user else None)
+    
+    feedback = Feedback.objects.create(
+        user=user,
+        user_name=user_name,
+        user_phone=user_phone,
+        message=message,
+        image=image,
+    )
+    
+    # Telegram botga yuborish
+    try:
+        admin_chat_id = None
+        from restaurants.models import AppSettings
+        setting = AppSettings.objects.filter(key='admin_telegram_chat_id').first()
+        if setting and setting.value:
+            admin_chat_id = setting.value
+        
+        if admin_chat_id:
+            import requests
+            bot_token = '8433417347:AAHtctEF2mDuhdUpbV43cw_cQoho4-keOk4'
+            
+            user_display = feedback.user_name or "Nomalum"
+            phone_display = feedback.user_phone or "Nomalum"
+            time_str = feedback.created_at.strftime('%Y-%m-%d %H:%M')
+            
+            text = f"📩 *Yangi Fikr-mulohaza!*\n\n"
+            text += f"👤 *Ism:* {user_display}\n"
+            text += f"📱 *Telefon:* {phone_display}\n"
+            text += f"💬 *Xabar:*\n{feedback.message[:200]}\n\n"
+            text += f"🕐 *Vaqt:* {time_str}"
+            
+            requests.post(
+                f'https://api.telegram.org/bot{bot_token}/sendMessage',
+                json={'chat_id': admin_chat_id, 'text': text, 'parse_mode': 'Markdown'},
+                timeout=10,
+            )
+    except:
+        pass
+    
+    return JsonResponse({'success': True, 'id': feedback.id})
+
+
 @api_view(['POST'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
-@parser_classes([MultiPartParser, FormParser, JSONParser])
-def submit_feedback(request):
     from .models import Feedback
     
     message = request.data.get('message') or ''
