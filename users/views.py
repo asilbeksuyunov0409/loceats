@@ -30,6 +30,71 @@ def submit_feedback(request):
     
     if not message:
         return Response({'error': 'Xabar bo\'sh bo\'lishi mumkin'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    image = request.FILES.get('image') if request.FILES else None
+    
+    first_name = request.data.get('first_name') or (user.first_name if user else 'Mehmon')
+    last_name = request.data.get('last_name') or (user.last_name if user else '')
+    user_name = f"{first_name} {last_name}".strip() or (f"{user.first_name} {user.last_name}" if user else None)
+    user_phone = request.data.get('phone') or (user.phone if user else None)
+    
+    feedback = Feedback.objects.create(
+        user=user,
+        user_name=user_name,
+        user_phone=user_phone,
+        message=message,
+        image=image,
+    )
+    
+    # Telegram botga yuborish
+    try:
+        admin_chat_id = get_admin_chat_id()
+        if admin_chat_id:
+            import requests
+            bot_token = '8433417347:AAHtctEF2mDuhdUpbV43cw_cQoho4-keOk4'
+            
+            user_display = feedback.user_name or "Nomalum"
+            phone_display = feedback.user_phone or "Nomalum"
+            time_str = feedback.created_at.strftime('%Y-%m-%d %H:%M')
+            
+            text = f"📩 *Yangi Fikr-mulohaza!*\n\n"
+            text += f"👤 *Ism:* {user_display}\n"
+            text += f"📱 *Telefon:* {phone_display}\n"
+            text += f"💬 *Xabar:*\n{feedback.message}\n\n"
+            text += f"🕐 *Vaqt:* {time_str}\n\n"
+            text += f"Shu xabarni CHERTING va javob yozing!"
+            
+            resp = requests.post(
+                f'https://api.telegram.org/bot{bot_token}/sendMessage',
+                json={'chat_id': admin_chat_id, 'text': text, 'parse_mode': 'Markdown'},
+                timeout=10,
+            )
+            if resp.status_code == 200:
+                result = resp.json()
+                if result.get('ok'):
+                    msg_id = result.get('result', {}).get('message_id')
+                    # JSON faylga saqlash
+                    import json as json_module
+                    import os
+                    project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                    msg_file = os.path.join(project_dir, 'feedback_msg_ids.json')
+                    data = {}
+                    try:
+                        if os.path.exists(msg_file):
+                            with open(msg_file, 'r') as f:
+                                data = json_module.load(f)
+                    except:
+                        pass
+                    data[str(msg_id)] = feedback.id
+                    try:
+                        with open(msg_file, 'w') as f:
+                            json_module.dump(data, f)
+                    except:
+                        pass
+    except Exception as e:
+        print(f"Telegram xato: {e}")
+    
+    return Response({'success': True, 'id': feedback.id})
 
 @api_view(['POST'])
 def login(request):
@@ -106,86 +171,6 @@ def get_admin_chat_id():
             pass
     
     return admin_chat_id
-
-
-@api_view(['POST'])
-@authentication_classes([])
-@permission_classes([])
-@parser_classes([MultiPartParser, FormParser, JSONParser])
-def submit_feedback(request):
-    from .models import Feedback
-    
-    message = request.data.get('message') or ''
-    user = request.user if request.user.is_authenticated else None
-    
-    if not message:
-        return Response({'error': 'Xabar bo\'sh bo\'lishi mumkin'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    image = request.FILES.get('image') if request.FILES else None
-    
-    first_name = request.data.get('first_name') or (user.first_name if user else 'Mehmon')
-    last_name = request.data.get('last_name') or (user.last_name if user else '')
-    user_name = f"{first_name} {last_name}".strip() or (f"{user.first_name} {user.last_name}" if user else None)
-    user_phone = request.data.get('phone') or (user.phone if user else None)
-    
-    feedback = Feedback.objects.create(
-        user=user,
-        user_name=user_name,
-        user_phone=user_phone,
-        message=message,
-        image=image,
-        telegram_chat_id=str(request.data.get('telegram_chat_id', '')),
-    )
-    
-    # Telegram botga yuborish va message ID ni JSON ga saqlash
-    try:
-        admin_chat_id = get_admin_chat_id()
-        if admin_chat_id:
-            import requests
-            bot_token = '8433417347:AAHtctEF2mDuhdUpbV43cw_cQoho4-keOk4'
-            
-            user_display = feedback.user_name or "Nomalum"
-            phone_display = feedback.user_phone or "Nomalum"
-            time_str = feedback.created_at.strftime('%Y-%m-%d %H:%M')
-            
-            text = f"📩 *Yangi Fikr-mulohaza!*\n\n"
-            text += f"👤 *Ism:* {user_display}\n"
-            text += f"📱 *Telefon:* {phone_display}\n"
-            text += f"💬 *Xabar:*\n{feedback.message}\n\n"
-            text += f"🕐 *Vaqt:* {time_str}\n\n"
-            text += f"Shu xabarni CHERTING va javob yozing!"
-            
-            resp = requests.post(
-                f'https://api.telegram.org/bot{bot_token}/sendMessage',
-                json={'chat_id': admin_chat_id, 'text': text, 'parse_mode': 'Markdown'},
-                timeout=10,
-            )
-            if resp.status_code == 200:
-                result = resp.json()
-                if result.get('ok'):
-                    msg_id = result.get('result', {}).get('message_id')
-                    # JSON faylga saqlash
-                    import json, os
-                    project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-                    msg_file = os.path.join(project_dir, 'feedback_msg_ids.json')
-                    data = {}
-                    try:
-                        if os.path.exists(msg_file):
-                            with open(msg_file, 'r') as f:
-                                data = json.load(f)
-                    except:
-                        pass
-                    data[str(msg_id)] = feedback.id
-                    try:
-                        with open(msg_file, 'w') as f:
-                            json.dump(data, f)
-                    except:
-                        pass
-                    print(f"Telegram yuborildi, msg_id: {msg_id}")
-    except Exception as e:
-        print(f"Telegram xato: {e}")
-    
-    return Response({'success': True, 'id': feedback.id})
 
 
 @api_view(['POST'])
