@@ -817,6 +817,7 @@ def superadmin_settings_view(request):
     app_logo_url = AppSettings.objects.filter(key='app_logo_url').first()
     app_version = AppSettings.objects.filter(key='app_version').first()
     home_background = AppSettings.objects.filter(key='home_background').first()
+    admin_telegram_chat_id = AppSettings.objects.filter(key='admin_telegram_chat_id').first()
     superadmin = SuperAdmin.objects.first()
     superadmin_username = superadmin.username if superadmin else ''
     
@@ -853,6 +854,9 @@ def superadmin_settings_view(request):
             # Theme & Language
             AppSettings.objects.update_or_create(key='auto_dark_mode', defaults={'value': request.POST.get('auto_dark_mode', '')})
             AppSettings.objects.update_or_create(key='default_language', defaults={'value': request.POST.get('default_language', 'uz')})
+            
+            # Telegram Admin Chat ID
+            AppSettings.objects.update_or_create(key='admin_telegram_chat_id', defaults={'value': request.POST.get('admin_telegram_chat_id', '')})
             
             # Developer Card
             AppSettings.objects.update_or_create(key='developer_card', defaults={'value': request.POST.get('developer_card', '')})
@@ -965,6 +969,7 @@ def superadmin_settings_view(request):
         'default_language': default_language.value if default_language else 'uz',
         'developer_card': developer_card.value if developer_card else '',
         'developer_name': developer_name.value if developer_name else '',
+        'admin_telegram_chat_id': admin_telegram_chat_id.value if admin_telegram_chat_id else '',
     }
     return render(request, 'admins/settings.html', context)
 

@@ -140,6 +140,25 @@
     </form>
 </div>
 
+<!-- Telegram Bot Sozlamalari -->
+<div class="card-modern mb-4">
+    <h5 class="mb-4"><i class="fab fa-telegram me-2"></i>Telegram Bot</h5>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save_all">
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <label class="form-label">Admin Telegram Chat ID</label>
+                <input type="text" name="admin_telegram_chat_id" class="form-control" value="{{ admin_telegram_chat_id }}" placeholder="5815737169">
+                <small class="text-muted">Telegram bot @loceatsbot ga habar yuborganingizdan keyin avtomatik to'ldiriladi. Yoki @intel_uzb dan olingan ID ni kiriting.</small>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success">
+            <i class="fab fa-telegram me-2"></i>Telegram Sozlamasini Saqlash
+        </button>
+    </form>
+</div>
+
 <!-- Dasturchiga Qahva -->
 <div class="card-modern mb-4">
     <h5 class="mb-4"><i class="fas fa-coffee me-2"></i>Dasturchiga Qahva Sotib Oling</h5>
