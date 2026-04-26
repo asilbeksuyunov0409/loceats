@@ -101,7 +101,7 @@ from django.utils.decorators import method_decorator
 @csrf_exempt
 @require_POST
 def submit_feedback_simple(request):
-    from .models import Feedback
+from .models import Feedback
     
     message = request.POST.get('message', '') or ''
     
