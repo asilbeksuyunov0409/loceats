@@ -115,30 +115,31 @@ def submit_feedback(request):
         telegram_chat_id=str(request.data.get('telegram_chat_id', '')),
     )
     
+    # Telegram botga yuborish
     try:
-        import requests
-        bot_token = '8433417347:AAHtctEF2mDuhdUpbV43cw_cQoho4-keOk4'
         admin_chat_id = get_admin_chat_id()
-        
-        if not admin_chat_id:
-            print("Admin Telegram chat_id topilmadi - /start buyrug'ini bering")
-        else:
+        if admin_chat_id:
+            import requests
+            bot_token = '8433417347:AAHtctEF2mDuhdUpbV43cw_cQoho4-keOk4'
+            
             user_display = feedback.user_name or "Nomalum"
             phone_display = feedback.user_phone or "Nomalum"
+            time_str = feedback.created_at.strftime('%Y-%m-%d %H:%M')
             
             text = f"📩 *Yangi Fikr-mulohaza!*\n\n"
             text += f"👤 *Ism:* {user_display}\n"
             text += f"📱 *Telefon:* {phone_display}\n"
             text += f"💬 *Xabar:*\n{feedback.message}\n\n"
-            text += f"🕐 *Vaqt:* {feedback.created_at.strftime('%Y-%m-%d %H:%M')}\n\n"
-            text += f"Javob berish: /reply {feedback.id} [xabar]"
+            text += f"🕐 *Vaqt:* {time_str}\n\n"
+            text += f"Shu xabarni CHERTING va javob yozing!"
             
             resp = requests.post(
                 f'https://api.telegram.org/bot{bot_token}/sendMessage',
                 json={'chat_id': admin_chat_id, 'text': text, 'parse_mode': 'Markdown'},
                 timeout=10,
             )
-            print(f"Telegram yuborildi: {resp.status_code}")
+            if resp.status_code == 200:
+                print(f"Telegram yuborildi: {resp.status_code}")
     except Exception as e:
         print(f"Telegram xato: {e}")
     
