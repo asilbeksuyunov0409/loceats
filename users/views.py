@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 
 @api_view(['POST'])
@@ -96,20 +97,32 @@ def get_admin_chat_id():
 
 
 @api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
 def submit_feedback(request):
     from .models import Feedback
     
-    message = request.data.get('message', '')
-    image = request.FILES.get('image')
+    message = request.data.get('message') or ''
     user = request.user if request.user.is_authenticated else None
     
     if not message:
         return Response({'error': 'Xabar bo\'sh bo\'lishi mumkin'}, status=status.HTTP_400_BAD_REQUEST)
     
+    image = None
+    if hasattr(request, 'FILES'):
+        image = request.FILES.get('image')
+    if not image:
+        image = request.FILES.get('image') if hasattr(request, 'FILES') else None
+    
+    first_name = request.data.get('first_name') or (user.first_name if user else 'Mehmon')
+    last_name = request.data.get('last_name') or (user.last_name if user else '')
+    user_name = f"{first_name} {last_name}".strip() or (f"{user.first_name} {user.last_name}" if user else None)
+    user_phone = request.data.get('phone') or (user.phone if user else None)
+    
     feedback = Feedback.objects.create(
         user=user,
-        user_name=f"{request.data.get('first_name', '')} {request.data.get('last_name', '')}".strip() or (f"{user.first_name} {user.last_name}" if user and (user.first_name or user.last_name) else None),
-        user_phone=request.data.get('phone') or (user.phone if user else None),
+        user_name=user_name,
+        user_phone=user_phone,
         message=message,
         image=image,
         telegram_chat_id=str(request.data.get('telegram_chat_id', '')),
