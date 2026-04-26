@@ -108,11 +108,7 @@ def submit_feedback(request):
     if not message:
         return Response({'error': 'Xabar bo\'sh bo\'lishi mumkin'}, status=status.HTTP_400_BAD_REQUEST)
     
-    image = None
-    if hasattr(request, 'FILES'):
-        image = request.FILES.get('image')
-    if not image:
-        image = request.FILES.get('image') if hasattr(request, 'FILES') else None
+    image = request.FILES.get('image') if request.FILES else None
     
     first_name = request.data.get('first_name') or (user.first_name if user else 'Mehmon')
     last_name = request.data.get('last_name') or (user.last_name if user else '')
