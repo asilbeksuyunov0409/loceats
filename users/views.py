@@ -3,8 +3,8 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 
 @api_view(['POST'])
@@ -18,6 +18,18 @@ def register(request):
             'user': UserSerializer(user).data
         }, status=status.HTTP_201_CREATED)
     return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def submit_feedback(request):
+    from .models import Feedback
+    
+    message = request.data.get('message') or ''
+    user = request.user
+    
+    if not message:
+        return Response({'error': 'Xabar bo\'sh bo\'lishi mumkin'}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 def login(request):
@@ -99,6 +111,7 @@ def get_admin_chat_id():
 @api_view(['POST'])
 @authentication_classes([])
 @permission_classes([])
+@parser_classes([MultiPartParser, FormParser, JSONParser])
 def submit_feedback(request):
     from .models import Feedback
     
