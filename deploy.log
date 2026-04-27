@@ -1,0 +1,451 @@
+
+=== STDOUT ===
+=== Git pull ===
+Updating 1786378..5580c24
+Fast-forward
+ README.md | 1 +
+ 1 file changed, 1 insertion(+)
+=== Virtual env ===
+=== Paketlar ===
+=== Migrate ===
+Operations to perform:
+  Apply all migrations: admin, admins, auth, authtoken, contenttypes, restaurants, sessions, users
+Running migrations:
+  No migrations to apply.
+=== Static ===
+
+0 static files copied to '/home/loceats1/loyha3/loyha/staticfiles', 161 unmodified.
+=== Passenger restart ===
+=== Deploy tugadi! ===
+
+=== STDERR ===
+From https://github.com/asilbeksuyunov0409/loceats
+ * branch            main       -> FETCH_HEAD
+   1786378..5580c24  main       -> origin/main
+System check identified some issues:
+
+WARNINGS:
+?: (mysql.W002) MariaDB Strict Mode is not set for database connection 'default'
+	HINT: MariaDB's Strict Mode fixes many data integrity problems in MariaDB, such as data truncation upon insertion, by escalating warnings into errors. It is strongly recommended you activate it. See: https://docs.djangoproject.com/en/4.2/ref/databases/#mysql-sql-mode
+
+=== RETURN CODE: 0 ===
+
+=== STDOUT ===
+=== Git pull ===
+Updating 5580c24..66c8312
+
+=== STDERR ===
+From https://github.com/asilbeksuyunov0409/loceats
+ * branch            main       -> FETCH_HEAD
+   5580c24..66c8312  main       -> origin/main
+error: Your local changes to the following files would be overwritten by merge:
+	loceats/urls.py
+Please commit your changes or stash them before you merge.
+Aborting
+
+=== RETURN CODE: 1 ===
+
+=== STDOUT ===
+=== Settings fix ===
+=== Git pull ===
+HEAD is now at 191dd89 telegram bot 1.0.3
+=== Settings fix again ===
+=== Virtual env ===
+=== Paketlar ===
+=== Migrate ===
+Operations to perform:
+  Apply all migrations: admin, admins, auth, authtoken, contenttypes, restaurants, sessions, users
+Running migrations:
+  No migrations to apply.
+=== Static ===
+
+0 static files copied to '/home/loceats1/loyha3/loyha/staticfiles', 161 unmodified.
+=== Passenger restart ===
+=== Deploy tugadi! ===
+
+=== STDERR ===
+From https://github.com/asilbeksuyunov0409/loceats
+ * branch            main       -> FETCH_HEAD
+   2a25cfa..191dd89  main       -> origin/main
+System check identified some issues:
+
+WARNINGS:
+?: (mysql.W002) MariaDB Strict Mode is not set for database connection 'default'
+	HINT: MariaDB's Strict Mode fixes many data integrity problems in MariaDB, such as data truncation upon insertion, by escalating warnings into errors. It is strongly recommended you activate it. See: https://docs.djangoproject.com/en/4.2/ref/databases/#mysql-sql-mode
+
+=== RETURN CODE: 0 ===
+
+=== STDOUT ===
+=== Settings fix ===
+=== Git pull ===
+HEAD is now at cdd180e ignore settings.py
+=== Settings fix again ===
+=== Virtual env ===
+=== Paketlar ===
+=== Migrate ===
+Operations to perform:
+  Apply all migrations: admin, admins, auth, authtoken, contenttypes, restaurants, sessions, users
+Running migrations:
+  No migrations to apply.
+=== Static ===
+
+0 static files copied to '/home/loceats1/loyha3/loyha/staticfiles', 161 unmodified.
+=== Passenger restart ===
+=== Deploy tugadi! ===
+
+=== STDERR ===
+From https://github.com/asilbeksuyunov0409/loceats
+ * branch            main       -> FETCH_HEAD
+   191dd89..cdd180e  main       -> origin/main
+System check identified some issues:
+
+WARNINGS:
+?: (mysql.W002) MariaDB Strict Mode is not set for database connection 'default'
+	HINT: MariaDB's Strict Mode fixes many data integrity problems in MariaDB, such as data truncation upon insertion, by escalating warnings into errors. It is strongly recommended you activate it. See: https://docs.djangoproject.com/en/4.2/ref/databases/#mysql-sql-mode
+
+=== RETURN CODE: 0 ===
+
+=== STDOUT ===
+=== Settings fix ===
+=== Git pull ===
+HEAD is now at 4720806 telegram bot 1.0.3
+=== Settings fix again ===
+=== Virtual env ===
+=== Paketlar ===
+=== Migrate ===
+Operations to perform:
+  Apply all migrations: admin, admins, auth, authtoken, contenttypes, restaurants, sessions, users
+Running migrations:
+  No migrations to apply.
+=== Static ===
+
+0 static files copied to '/home/loceats1/loyha3/loyha/staticfiles', 161 unmodified.
+=== Passenger restart ===
+=== Deploy tugadi! ===
+
+=== STDERR ===
+From https://github.com/asilbeksuyunov0409/loceats
+ * branch            main       -> FETCH_HEAD
+   cdd180e..4720806  main       -> origin/main
+System check identified some issues:
+
+WARNINGS:
+?: (mysql.W002) MariaDB Strict Mode is not set for database connection 'default'
+	HINT: MariaDB's Strict Mode fixes many data integrity problems in MariaDB, such as data truncation upon insertion, by escalating warnings into errors. It is strongly recommended you activate it. See: https://docs.djangoproject.com/en/4.2/ref/databases/#mysql-sql-mode
+
+=== RETURN CODE: 0 ===
+
+=== STDOUT ===
+=== Settings fix ===
+=== Git pull ===
+HEAD is now at 2811c55 telegram bot 1.0.4
+=== Settings fix again ===
+=== Virtual env ===
+=== Paketlar ===
+=== Migrate ===
+Operations to perform:
+  Apply all migrations: admin, admins, auth, authtoken, contenttypes, restaurants, sessions, users
+Running migrations:
+  No migrations to apply.
+=== Static ===
+
+0 static files copied to '/home/loceats1/loyha3/loyha/staticfiles', 161 unmodified.
+=== Passenger restart ===
+=== Deploy tugadi! ===
+
+=== STDERR ===
+From https://github.com/asilbeksuyunov0409/loceats
+ * branch            main       -> FETCH_HEAD
+   4720806..2811c55  main       -> origin/main
+System check identified some issues:
+
+WARNINGS:
+?: (mysql.W002) MariaDB Strict Mode is not set for database connection 'default'
+	HINT: MariaDB's Strict Mode fixes many data integrity problems in MariaDB, such as data truncation upon insertion, by escalating warnings into errors. It is strongly recommended you activate it. See: https://docs.djangoproject.com/en/4.2/ref/databases/#mysql-sql-mode
+
+=== RETURN CODE: 0 ===
+
+=== STDOUT ===
+=== Settings fix ===
+=== Git pull ===
+HEAD is now at d7f48a9 telegram bot 1.0.5
+=== Settings fix again ===
+=== Virtual env ===
+=== Paketlar ===
+=== Migrate ===
+Operations to perform:
+  Apply all migrations: admin, admins, auth, authtoken, contenttypes, restaurants, sessions, users
+Running migrations:
+  No migrations to apply.
+  Your models in app(s): 'users' have changes that are not yet reflected in a migration, and so won't be applied.
+  Run 'manage.py makemigrations' to make new migrations, and then re-run 'manage.py migrate' to apply them.
+=== Static ===
+
+0 static files copied to '/home/loceats1/loyha3/loyha/staticfiles', 161 unmodified.
+=== Passenger restart ===
+=== Deploy tugadi! ===
+
+=== STDERR ===
+From https://github.com/asilbeksuyunov0409/loceats
+ * branch            main       -> FETCH_HEAD
+   2811c55..d7f48a9  main       -> origin/main
+System check identified some issues:
+
+WARNINGS:
+?: (mysql.W002) MariaDB Strict Mode is not set for database connection 'default'
+	HINT: MariaDB's Strict Mode fixes many data integrity problems in MariaDB, such as data truncation upon insertion, by escalating warnings into errors. It is strongly recommended you activate it. See: https://docs.djangoproject.com/en/4.2/ref/databases/#mysql-sql-mode
+
+=== RETURN CODE: 0 ===
+
+=== STDOUT ===
+=== Settings fix ===
+=== Git pull ===
+HEAD is now at 56864ff telegram bot 1.0.6
+=== Settings fix again ===
+=== Virtual env ===
+=== Paketlar ===
+=== Migrate ===
+Operations to perform:
+  Apply all migrations: admin, admins, auth, authtoken, contenttypes, restaurants, sessions, users
+Running migrations:
+  No migrations to apply.
+  Your models in app(s): 'users' have changes that are not yet reflected in a migration, and so won't be applied.
+  Run 'manage.py makemigrations' to make new migrations, and then re-run 'manage.py migrate' to apply them.
+=== Static ===
+
+0 static files copied to '/home/loceats1/loyha3/loyha/staticfiles', 161 unmodified.
+=== Passenger restart ===
+=== Deploy tugadi! ===
+
+=== STDERR ===
+From https://github.com/asilbeksuyunov0409/loceats
+ * branch            main       -> FETCH_HEAD
+   d7f48a9..56864ff  main       -> origin/main
+System check identified some issues:
+
+WARNINGS:
+?: (mysql.W002) MariaDB Strict Mode is not set for database connection 'default'
+	HINT: MariaDB's Strict Mode fixes many data integrity problems in MariaDB, such as data truncation upon insertion, by escalating warnings into errors. It is strongly recommended you activate it. See: https://docs.djangoproject.com/en/4.2/ref/databases/#mysql-sql-mode
+
+=== RETURN CODE: 0 ===
+
+=== STDOUT ===
+=== Settings fix ===
+=== Git pull ===
+HEAD is now at dbf8f0a telegram bot 1.0.8
+=== Settings fix again ===
+=== Virtual env ===
+=== Paketlar ===
+=== Migrate ===
+=== Static ===
+
+0 static files copied to '/home/loceats1/loyha3/loyha/staticfiles', 161 unmodified.
+=== Passenger restart ===
+=== Deploy tugadi! ===
+
+=== STDERR ===
+From https://github.com/asilbeksuyunov0409/loceats
+ * branch            main       -> FETCH_HEAD
+   56864ff..dbf8f0a  main       -> origin/main
+Traceback (most recent call last):
+  File "/home/loceats1/loyha3/loyha/manage.py", line 15, in <module>
+    execute_from_command_line(sys.argv)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/management/__init__.py", line 442, in execute_from_command_line
+    utility.execute()
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/management/__init__.py", line 436, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/management/base.py", line 412, in run_from_argv
+    self.execute(*args, **cmd_options)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/management/base.py", line 458, in execute
+    output = self.handle(*args, **options)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/management/base.py", line 106, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/management/commands/migrate.py", line 100, in handle
+    self.check(databases=[database])
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/management/base.py", line 485, in check
+    all_issues = checks.run_checks(
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/checks/registry.py", line 88, in run_checks
+    new_errors = check(app_configs=app_configs, databases=databases)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/checks/urls.py", line 14, in check_url_config
+    return check_resolver(resolver)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/checks/urls.py", line 24, in check_resolver
+    return check_method()
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/urls/resolvers.py", line 494, in check
+    for pattern in self.url_patterns:
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/utils/functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/urls/resolvers.py", line 715, in url_patterns
+    patterns = getattr(self.urlconf_module, "urlpatterns", self.urlconf_module)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/utils/functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/urls/resolvers.py", line 708, in urlconf_module
+    return import_module(self.urlconf_name)
+  File "/opt/alt/python39/lib64/python3.9/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1030, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1007, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 986, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 680, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 850, in exec_module
+  File "<frozen importlib._bootstrap>", line 228, in _call_with_frames_removed
+  File "/home/loceats1/loyha3/loyha/loceats/urls.py", line 57, in <module>
+    path('api/auth/', include('users.urls')),
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/urls/conf.py", line 38, in include
+    urlconf_module = import_module(urlconf_module)
+  File "/opt/alt/python39/lib64/python3.9/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1030, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1007, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 986, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 680, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 850, in exec_module
+  File "<frozen importlib._bootstrap>", line 228, in _call_with_frames_removed
+  File "/home/loceats1/loyha3/loyha/users/urls.py", line 2, in <module>
+    from . import views
+  File "/home/loceats1/loyha3/loyha/users/views.py", line 114, in <module>
+    @parser_classes([MultiPartParser, FormParser, JSONParser])
+NameError: name 'parser_classes' is not defined
+
+=== RETURN CODE: 0 ===
+
+=== STDOUT ===
+=== Settings fix ===
+=== Git pull ===
+HEAD is now at 8140dcb telegram bot 1.0.10
+=== Settings fix again ===
+=== Virtual env ===
+=== Paketlar ===
+=== Migrate ===
+Operations to perform:
+  Apply all migrations: admin, admins, auth, authtoken, contenttypes, restaurants, sessions, users
+Running migrations:
+  No migrations to apply.
+  Your models in app(s): 'users' have changes that are not yet reflected in a migration, and so won't be applied.
+  Run 'manage.py makemigrations' to make new migrations, and then re-run 'manage.py migrate' to apply them.
+=== Static ===
+
+0 static files copied to '/home/loceats1/loyha3/loyha/staticfiles', 161 unmodified.
+=== Passenger restart ===
+=== Deploy tugadi! ===
+
+=== STDERR ===
+From https://github.com/asilbeksuyunov0409/loceats
+ * branch            main       -> FETCH_HEAD
+   dbf8f0a..8140dcb  main       -> origin/main
+System check identified some issues:
+
+WARNINGS:
+?: (mysql.W002) MariaDB Strict Mode is not set for database connection 'default'
+	HINT: MariaDB's Strict Mode fixes many data integrity problems in MariaDB, such as data truncation upon insertion, by escalating warnings into errors. It is strongly recommended you activate it. See: https://docs.djangoproject.com/en/4.2/ref/databases/#mysql-sql-mode
+
+=== RETURN CODE: 0 ===
+
+=== STDOUT ===
+=== Settings fix ===
+=== Git pull ===
+HEAD is now at 8140dcb telegram bot 1.0.10
+=== Settings fix again ===
+=== Virtual env ===
+=== Paketlar ===
+=== Migrate ===
+Operations to perform:
+  Apply all migrations: admin, admins, auth, authtoken, contenttypes, restaurants, sessions, users
+Running migrations:
+  No migrations to apply.
+  Your models in app(s): 'users' have changes that are not yet reflected in a migration, and so won't be applied.
+  Run 'manage.py makemigrations' to make new migrations, and then re-run 'manage.py migrate' to apply them.
+=== Static ===
+
+0 static files copied to '/home/loceats1/loyha3/loyha/staticfiles', 161 unmodified.
+=== Passenger restart ===
+=== Deploy tugadi! ===
+
+=== STDERR ===
+From https://github.com/asilbeksuyunov0409/loceats
+ * branch            main       -> FETCH_HEAD
+System check identified some issues:
+
+WARNINGS:
+?: (mysql.W002) MariaDB Strict Mode is not set for database connection 'default'
+	HINT: MariaDB's Strict Mode fixes many data integrity problems in MariaDB, such as data truncation upon insertion, by escalating warnings into errors. It is strongly recommended you activate it. See: https://docs.djangoproject.com/en/4.2/ref/databases/#mysql-sql-mode
+
+=== RETURN CODE: 0 ===
+
+=== STDOUT ===
+=== Settings fix ===
+=== Git pull ===
+HEAD is now at 025e793 telegram bot 1.0.11
+=== Settings fix again ===
+=== Virtual env ===
+=== Paketlar ===
+=== Migrate ===
+=== Static ===
+
+0 static files copied to '/home/loceats1/loyha3/loyha/staticfiles', 161 unmodified.
+=== Passenger restart ===
+=== Deploy tugadi! ===
+
+=== STDERR ===
+From https://github.com/asilbeksuyunov0409/loceats
+ * branch            main       -> FETCH_HEAD
+   8140dcb..025e793  main       -> origin/main
+Traceback (most recent call last):
+  File "/home/loceats1/loyha3/loyha/manage.py", line 15, in <module>
+    execute_from_command_line(sys.argv)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/management/__init__.py", line 442, in execute_from_command_line
+    utility.execute()
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/management/__init__.py", line 436, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/management/base.py", line 412, in run_from_argv
+    self.execute(*args, **cmd_options)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/management/base.py", line 458, in execute
+    output = self.handle(*args, **options)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/management/base.py", line 106, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/management/commands/migrate.py", line 100, in handle
+    self.check(databases=[database])
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/management/base.py", line 485, in check
+    all_issues = checks.run_checks(
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/checks/registry.py", line 88, in run_checks
+    new_errors = check(app_configs=app_configs, databases=databases)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/checks/urls.py", line 14, in check_url_config
+    return check_resolver(resolver)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/core/checks/urls.py", line 24, in check_resolver
+    return check_method()
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/urls/resolvers.py", line 494, in check
+    for pattern in self.url_patterns:
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/utils/functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/urls/resolvers.py", line 715, in url_patterns
+    patterns = getattr(self.urlconf_module, "urlpatterns", self.urlconf_module)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/utils/functional.py", line 57, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/urls/resolvers.py", line 708, in urlconf_module
+    return import_module(self.urlconf_name)
+  File "/opt/alt/python39/lib64/python3.9/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1030, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1007, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 986, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 680, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 850, in exec_module
+  File "<frozen importlib._bootstrap>", line 228, in _call_with_frames_removed
+  File "/home/loceats1/loyha3/loyha/loceats/urls.py", line 57, in <module>
+    path('api/auth/', include('users.urls')),
+  File "/home/loceats1/virtualenv/loyha3/3.9/lib/python3.9/site-packages/django/urls/conf.py", line 38, in include
+    urlconf_module = import_module(urlconf_module)
+  File "/opt/alt/python39/lib64/python3.9/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1030, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1007, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 986, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 680, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 850, in exec_module
+  File "<frozen importlib._bootstrap>", line 228, in _call_with_frames_removed
+  File "/home/loceats1/loyha3/loyha/users/urls.py", line 2, in <module>
+    from . import views
+  File "/home/loceats1/loyha3/loyha/users/views.py", line 116
+    from .models import Feedback
+IndentationError: unexpected indent
+
+=== RETURN CODE: 0 ===

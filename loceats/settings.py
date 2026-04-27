@@ -10,7 +10,7 @@ SECRET_KEY = 'django-insecure-loceats-secret-key-change-in-production'
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['*', '10.132.233.57', '127.0.0.1', 'localhost', '0.0.0.0']
+ALLOWED_HOSTS = ['*', '10.132.233.57', '127.0.0.1', 'localhost', '0.0.0.0', 'loceatsadmin.uz', 'www.loceatsadmin.uz']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
