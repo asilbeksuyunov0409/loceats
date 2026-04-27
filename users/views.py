@@ -1,9 +1,5 @@
 from django.http import JsonResponse
-from django.views import View
 from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-
-from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
@@ -12,64 +8,74 @@ from rest_framework.permissions import IsAuthenticated
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 
 
-@method_decorator(csrf_exempt)
-class SubmitFeedbackView(View):
-    def post(self, request):
-        from .models import Feedback
-        
-        message = request.POST.get('message', '') or ''
-        
-        if not message:
-            return JsonResponse({'error': 'Xabar yoq'}, status=400)
-        
-        auth_header = request.headers.get('Authorization', '') or request.META.get('HTTP_AUTHORIZATION', '')
-        user = None
-        if auth_header.startswith('Token '):
-            token_key = auth_header[6:].strip()
-            try:
-                token = Token.objects.get(key=token_key)
-                user = token.user
-            except:
-                pass
-        
-        image = request.FILES.get('image') if request.FILES else None
-        
-        first_name = request.POST.get('first_name') or (user.first_name if user else 'Mehmon')
-        last_name = request.POST.get('last_name') or (user.last_name if user else '')
-        user_name = f"{first_name} {last_name}".strip()
-        user_phone = request.POST.get('phone') or (user.phone if user else None)
-        
-        feedback = Feedback.objects.create(
-            user=user,
-            user_name=user_name,
-            user_phone=user_phone,
-            message=message,
-            image=image,
-        )
-        
+@csrf_exempt
+def feedback_send(request):
+    """Feedback yuborish - oddiy Django view"""
+    from .models import Feedback
+    
+    # Faqat POST qabul qilish
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Faqat POST'}, status=405)
+    
+    # Xabarni olish
+    message = ''
+    if request.POST:
+        message = request.POST.get('message', '')
+    if not message and request.body:
         try:
-            admin_chat_id = None
-            from restaurants.models import AppSettings
-            setting = AppSettings.objects.filter(key='admin_telegram_chat_id').first()
-            if setting and setting.value:
-                admin_chat_id = setting.value
-            
-            if admin_chat_id:
-                import requests
-                bot_token = '8433417347:AAHtctEF2mDuhdUpbV43cw_cQoho4-keOk4'
-                text = f"Yangi Fikr-mulohaza!\nIsm: {user_name}\nTelefon: {user_phone or 'yoq'}\nXabar: {message[:100]}"
-                requests.post(
-                    f'https://api.telegram.org/bot{bot_token}/sendMessage',
-                    json={'chat_id': admin_chat_id, 'text': text},
-                    timeout=5,
-                )
+            body = request.body.decode('utf-8')
+            for part in body.split('&'):
+                if part.startswith('message='):
+                    message = part[8:].replace('+', ' ')
+                    break
         except:
             pass
-        
-        return JsonResponse({'success': True, 'id': feedback.id})
-
-
-submit_feedback_simple = SubmitFeedbackView.as_view()
+    
+    if not message:
+        return JsonResponse({'error': 'Xabar kerak'}, status=400)
+    
+    # User ni olish
+    user = None
+    auth = request.headers.get('Authorization', '')
+    if auth.startswith('Token '):
+        try:
+            token = Token.objects.get(key=auth[6:])
+            user = token.user
+        except:
+            pass
+    
+    # Rasmni olish
+    image = None
+    if request.FILES:
+        image = request.FILES.get('image')
+    
+    # Ma'lumotlarni olish
+    first_name = 'Mehmon'
+    last_name = ''
+    user_phone = None
+    
+    if request.POST:
+        first_name = request.POST.get('first_name') or first_name
+        last_name = request.POST.get('last_name') or ''
+        user_phone = request.POST.get('phone') or None
+    
+    if user:
+        first_name = user.first_name or first_name
+        last_name = user.last_name or ''
+        user_phone = user.phone or user_phone
+    
+    user_name = f"{first_name} {last_name}".strip() or 'Mehmon'
+    
+    # Feedback yaratish
+    feedback = Feedback.objects.create(
+        user=user,
+        user_name=user_name,
+        user_phone=user_phone,
+        message=message,
+        image=image,
+    )
+    
+    return JsonResponse({'success': True, 'id': feedback.id})
 
 
 @api_view(['POST'])
