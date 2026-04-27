@@ -1,4 +1,5 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
@@ -9,32 +10,17 @@ from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 
 
 @csrf_exempt
+@require_POST
 def feedback_send(request):
-    """Feedback yuborish - oddiy Django view"""
-    from .models import Feedback
+    from users.models import Feedback
     
-    # Faqat POST qabul qilish
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Faqat POST'}, status=405)
-    
-    # Xabarni olish
     message = ''
     if request.POST:
         message = request.POST.get('message', '')
-    if not message and request.body:
-        try:
-            body = request.body.decode('utf-8')
-            for part in body.split('&'):
-                if part.startswith('message='):
-                    message = part[8:].replace('+', ' ')
-                    break
-        except:
-            pass
     
     if not message:
         return JsonResponse({'error': 'Xabar kerak'}, status=400)
     
-    # User ni olish
     user = None
     auth = request.headers.get('Authorization', '')
     if auth.startswith('Token '):
@@ -44,32 +30,22 @@ def feedback_send(request):
         except:
             pass
     
-    # Rasmni olish
     image = None
     if request.FILES:
         image = request.FILES.get('image')
     
-    # Ma'lumotlarni olish
-    first_name = 'Mehmon'
-    last_name = ''
-    user_phone = None
-    
-    if request.POST:
-        first_name = request.POST.get('first_name') or first_name
-        last_name = request.POST.get('last_name') or ''
-        user_phone = request.POST.get('phone') or None
+    first_name = request.POST.get('first_name', 'Mehmon')
+    last_name = request.POST.get('last_name', '')
+    user_phone = request.POST.get('phone', '')
     
     if user:
         first_name = user.first_name or first_name
-        last_name = user.last_name or ''
+        last_name = user.last_name or last_name
         user_phone = user.phone or user_phone
     
-    user_name = f"{first_name} {last_name}".strip() or 'Mehmon'
-    
-    # Feedback yaratish
     feedback = Feedback.objects.create(
         user=user,
-        user_name=user_name,
+        user_name=f"{first_name} {last_name}".strip(),
         user_phone=user_phone,
         message=message,
         image=image,
@@ -87,8 +63,8 @@ def register(request):
         return Response({
             'token': token.key,
             'user': UserSerializer(user).data
-        }, status=status.HTTP_201_CREATED)
-    return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        }, status=201)
+    return Response({'error': serializer.errors}, status=400)
 
 
 @api_view(['POST'])
@@ -101,83 +77,38 @@ def login(request):
             'token': token.key,
             'user': UserSerializer(user).data
         })
-    return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'error': serializer.errors}, status=400)
 
 
 @api_view(['GET'])
 def me(request):
     if request.user.is_authenticated:
         return Response(UserSerializer(request.user).data)
-    return Response({'error': 'Tizimga kirmagan'}, status=status.HTTP_401_UNAUTHORIZED)
+    return Response({'error': 'Tizimga kirmagan'}, status=401)
 
 
 @api_view(['PUT'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def update_user(request):
-    first_name = request.data.get('first_name')
-    last_name = request.data.get('last_name')
-    phone = request.data.get('phone')
-    
-    if first_name:
-        request.user.first_name = first_name
-    if last_name:
-        request.user.last_name = last_name
-    if phone:
-        request.user.phone = phone
-    
+    if request.data.get('first_name'):
+        request.user.first_name = request.data['first_name']
+    if request.data.get('last_name'):
+        request.user.last_name = request.data['last_name']
+    if request.data.get('phone'):
+        request.user.phone = request.data['phone']
     request.user.save()
     return Response(UserSerializer(request.user).data)
 
 
-def get_admin_chat_id():
-    admin_chat_id = None
-    try:
-        from restaurants.models import AppSettings
-        setting = AppSettings.objects.filter(key='admin_telegram_chat_id').first()
-        if setting and setting.value:
-            admin_chat_id = setting.value
-    except:
-        pass
-    return admin_chat_id
-
-
-@api_view(['POST'])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
-def submit_feedback(request):
-    from .models import Feedback
-    
-    message = request.data.get('message') or ''
-    
-    if not message:
-        return Response({'error': 'Xabar yoq'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    user = request.user
-    first_name = request.data.get('first_name') or (user.first_name if user else 'Mehmon')
-    last_name = request.data.get('last_name') or (user.last_name if user else '')
-    user_name = f"{first_name} {last_name}".strip()
-    user_phone = request.data.get('phone') or (user.phone if user else None)
-    
-    feedback = Feedback.objects.create(
-        user=user,
-        user_name=user_name,
-        user_phone=user_phone,
-        message=message,
-    )
-    
-    return Response({'success': True, 'id': feedback.id})
-
-
 @api_view(['POST'])
 def reply_to_feedback(request):
-    from .models import Feedback
-    
+    from users.models import Feedback
     feedback_id = request.data.get('feedback_id')
     reply = request.data.get('reply', '')
     
     if not feedback_id or not reply:
-        return Response({'error': 'feedback_id va reply kerak'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Kerakli maydonlar yoq'}, status=400)
     
     try:
         feedback = Feedback.objects.get(id=feedback_id)
@@ -186,23 +117,20 @@ def reply_to_feedback(request):
         feedback.save()
         return Response({'success': True})
     except Feedback.DoesNotExist:
-        return Response({'error': 'Feedback topilmadi'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Topilmadi'}, status=404)
 
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def get_feedbacks(request):
-    from .models import Feedback
+    from users.models import Feedback
     
-    user_phone = request.query_params.get('phone')
-    if not user_phone:
-        user_phone = request.user.phone if hasattr(request.user, 'phone') and request.user.phone else None
+    phone = request.query_params.get('phone')
+    feedbacks = Feedback.objects.filter(user=request.user)
     
-    feedbacks = Feedback.objects.filter(user=request.user) if request.user.is_authenticated else Feedback.objects.none()
-    
-    if user_phone and not feedbacks.exists():
-        feedbacks = Feedback.objects.filter(user_phone=user_phone)
+    if phone and not feedbacks.exists():
+        feedbacks = Feedback.objects.filter(user_phone=phone)
     
     feedbacks = feedbacks.order_by('-created_at')
     data = []
